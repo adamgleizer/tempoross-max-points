@@ -3,15 +3,14 @@ package com.temporosscoach;
 public class TemporossStrategy
 {
 	private static final int REQUIRED_FREE_SLOTS = 19;
-	private static final int INITIAL_FISH_TARGET = 8;
+	private static final int COOKING_THRESHOLD = 8;
 	private static final int FIRST_BATCH_TARGET = 17;
 	private static final int FULL_BATCH_TARGET = 19;
 	private static final int FINAL_FISH_TARGET = 2;
-	private static final int LEAVE_FOR_SHIP_STORM = 90;
-	private static final int HARD_LEAVE_STORM = 93;
+	private static final int STORM_LEAVE_THRESHOLD = 93;
 	private static final int ESSENCE_GOAL = 50;
 
-	private TemporossStage stage = TemporossStage.CATCH_INITIAL;
+	private TemporossStage stage = TemporossStage.COLLECT_FIRST_BATCH;
 	private boolean wasInEncounter;
 	private boolean initialSupplyCheckComplete;
 	private boolean spiritPoolSeen;
@@ -21,6 +20,7 @@ public class TemporossStrategy
 	private int secondBatchLoaded;
 	private int thirdBatchLoaded;
 	private int finalFishLoaded;
+	private TemporossStage latchedCookingStage;
 
 	public TemporossInstruction getInstruction(TemporossState state)
 	{
@@ -72,7 +72,7 @@ public class TemporossStrategy
 			return progress("Get a hammer", "Click the highlighted Hammers object.",
 				TemporossInstruction.Type.GET_HAMMER, "Hammer", state.getHammer() + " / 1", false);
 		}
-		if (stage == TemporossStage.CATCH_INITIAL
+		if (stage == TemporossStage.COLLECT_FIRST_BATCH
 			&& totalFish(state) == 0
 			&& state.getFreeInventorySlots() > REQUIRED_FREE_SLOTS)
 		{
@@ -86,7 +86,7 @@ public class TemporossStrategy
 
 	void reset()
 	{
-		stage = TemporossStage.CATCH_INITIAL;
+		stage = TemporossStage.COLLECT_FIRST_BATCH;
 		wasInEncounter = false;
 		initialSupplyCheckComplete = false;
 		spiritPoolSeen = false;
@@ -96,6 +96,7 @@ public class TemporossStrategy
 		secondBatchLoaded = 0;
 		thirdBatchLoaded = 0;
 		finalFishLoaded = 0;
+		latchedCookingStage = null;
 	}
 
 	TemporossStage getStage()
@@ -105,7 +106,7 @@ public class TemporossStrategy
 
 	private void beginEncounter(TemporossState state)
 	{
-		stage = TemporossStage.CATCH_INITIAL;
+		stage = TemporossStage.COLLECT_FIRST_BATCH;
 		initialSupplyCheckComplete = false;
 		previousCookedFish = state.getCookedHarpoonfish();
 		previousTotalFish = totalFish(state);
@@ -119,31 +120,7 @@ public class TemporossStrategy
 
 		switch (stage)
 		{
-			case CATCH_INITIAL:
-				if (state.getRawHarpoonfish() >= INITIAL_FISH_TARGET)
-				{
-					stage = TemporossStage.COOK_INITIAL;
-				}
-				break;
-			case COOK_INITIAL:
-				if (state.getCookedHarpoonfish() >= FIRST_BATCH_TARGET)
-				{
-					stage = TemporossStage.LOAD_FIRST_BATCH;
-					firstBatchLoaded = 0;
-				}
-				else if (state.getRawHarpoonfish() == 0
-					&& state.getCookedHarpoonfish() >= INITIAL_FISH_TARGET)
-				{
-					stage = TemporossStage.CATCH_FIRST_BATCH;
-				}
-				break;
-			case CATCH_FIRST_BATCH:
-				if (totalFish >= FIRST_BATCH_TARGET)
-				{
-					stage = TemporossStage.COOK_FIRST_BATCH;
-				}
-				break;
-			case COOK_FIRST_BATCH:
+			case COLLECT_FIRST_BATCH:
 				if (state.getCookedHarpoonfish() >= FIRST_BATCH_TARGET)
 				{
 					stage = TemporossStage.LOAD_FIRST_BATCH;
@@ -155,24 +132,17 @@ public class TemporossStrategy
 				if (firstBatchLoaded >= FIRST_BATCH_TARGET
 					|| (firstBatchLoaded > 0 && state.getCookedHarpoonfish() == 0))
 				{
-					stage = TemporossStage.CATCH_SECOND_BATCH;
+					stage = TemporossStage.COLLECT_SECOND_BATCH;
 				}
 				break;
-			case CATCH_SECOND_BATCH:
-				if (isStormAtLeast(state, LEAVE_FOR_SHIP_STORM)
+			case COLLECT_SECOND_BATCH:
+				if (isStormAtLeast(state, STORM_LEAVE_THRESHOLD)
 					&& state.getCookedHarpoonfish() > 0)
 				{
 					stage = TemporossStage.LOAD_SECOND_BATCH;
 					secondBatchLoaded = 0;
 				}
-				else if (totalFish >= FULL_BATCH_TARGET)
-				{
-					stage = TemporossStage.COOK_SECOND_BATCH;
-				}
-				break;
-			case COOK_SECOND_BATCH:
-				if ((state.getRawHarpoonfish() == 0 || isStormAtLeast(state, LEAVE_FOR_SHIP_STORM))
-					&& state.getCookedHarpoonfish() > 0)
+				else if (state.getCookedHarpoonfish() >= FULL_BATCH_TARGET)
 				{
 					stage = TemporossStage.LOAD_SECOND_BATCH;
 					secondBatchLoaded = 0;
@@ -196,18 +166,12 @@ public class TemporossStrategy
 			case PREPARE_SECOND_PHASE:
 				if (isReadyForSecondPhaseFishing(state))
 				{
-					stage = TemporossStage.CATCH_THIRD_BATCH;
+					stage = TemporossStage.COLLECT_THIRD_BATCH;
 				}
 				break;
-			case CATCH_THIRD_BATCH:
-				if (totalFish >= FULL_BATCH_TARGET
-					|| (isStormAtLeast(state, LEAVE_FOR_SHIP_STORM) && totalFish > 0))
-				{
-					stage = TemporossStage.COOK_THIRD_BATCH;
-				}
-				break;
-			case COOK_THIRD_BATCH:
-				if ((state.getRawHarpoonfish() == 0 || isStormAtLeast(state, HARD_LEAVE_STORM))
+			case COLLECT_THIRD_BATCH:
+				if ((state.getCookedHarpoonfish() >= FULL_BATCH_TARGET
+					|| isStormAtLeast(state, STORM_LEAVE_THRESHOLD))
 					&& state.getCookedHarpoonfish() > 0)
 				{
 					stage = TemporossStage.LOAD_THIRD_BATCH;
@@ -260,50 +224,23 @@ public class TemporossStrategy
 		int totalFish = totalFish(state);
 		switch (stage)
 		{
-			case CATCH_INITIAL:
-				return progress("Catch harpoonfish",
-					TemporossInstruction.Type.FISH,
-					"Raw harpoonfish", state.getRawHarpoonfish() + " / " + INITIAL_FISH_TARGET,
-					state.getRawHarpoonfish() == INITIAL_FISH_TARGET);
-			case COOK_INITIAL:
-				if (state.isDoubleFishingSpotActive()
-					&& state.getRawHarpoonfish() > 0
-					&& totalFish < FIRST_BATCH_TARGET)
-				{
-					return doubleSpotProgress("Fish the double spot",
-						"Pause cooking and fish the double spot while it is active.",
-						TemporossInstruction.Type.FISH, "Total fish",
-						totalFish + " / " + FIRST_BATCH_TARGET, totalFish >= FIRST_BATCH_TARGET);
-				}
-				return progress("Cook fish",
-					TemporossInstruction.Type.COOK, "Cooked harpoonfish",
-					state.getCookedHarpoonfish() + " / " + FIRST_BATCH_TARGET,
-					state.getCookedHarpoonfish() >= FIRST_BATCH_TARGET);
-			case CATCH_FIRST_BATCH:
-				return progressWithStatus("Fish to 17 total",
-					TemporossInstruction.Type.FISH, "Total fish", totalFish + " / " + FIRST_BATCH_TARGET,
-					totalFish >= FIRST_BATCH_TARGET, "Double spot",
-					state.isDoubleFishingSpotActive() ? "Active" : "Inactive",
-					state.isDoubleFishingSpotActive(), state.isDoubleFishingSpotActive());
-			case COOK_FIRST_BATCH:
-				return progress("Cook all 17",
-					TemporossInstruction.Type.COOK, "Cooked harpoonfish",
-					state.getCookedHarpoonfish() + " / " + FIRST_BATCH_TARGET,
-					state.getCookedHarpoonfish() >= FIRST_BATCH_TARGET);
+			case COLLECT_FIRST_BATCH:
+				return batchCollectionInstruction(state, FIRST_BATCH_TARGET, "");
 			case LOAD_FIRST_BATCH:
 				return progress("Load Fish",
 					"",
 					TemporossInstruction.Type.LOAD,
 					"Fish loaded", firstBatchLoaded + " / " + FIRST_BATCH_TARGET,
 					firstBatchLoaded >= FIRST_BATCH_TARGET);
-			case CATCH_SECOND_BATCH:
-				return batchCollectionInstruction(state, totalFish,
+			case COLLECT_SECOND_BATCH:
+				if (state.isShipFireActive())
+				{
+					return instruction("Douse ship fire",
+						"Extinguish the active fire on the ship before collecting the next batch.",
+						TemporossInstruction.Type.DOUSE_FIRE);
+				}
+				return batchCollectionInstruction(state, FULL_BATCH_TARGET,
 					"Douse the ship fire and any blocking island fires.");
-			case COOK_SECOND_BATCH:
-				return progress("Cook the batch",
-					"Cook every fish, then run to the ammunition crate.",
-					TemporossInstruction.Type.COOK, "Raw fish left",
-					Integer.toString(state.getRawHarpoonfish()), state.getRawHarpoonfish() == 0);
 			case LOAD_SECOND_BATCH:
 				return progress("Load the batch",
 					"Load every cooked fish. A short batch will be carried into the recovery guidance.",
@@ -322,15 +259,18 @@ public class TemporossStrategy
 					"Douse 5-6 fires if needed, refill buckets, then drop excess buckets to make room for 19 fish.",
 					TemporossInstruction.Type.SAFETY, "Ready to fish",
 					secondPhasePreparationStatus(state), isReadyForSecondPhaseFishing(state));
-			case CATCH_THIRD_BATCH:
-				return batchCollectionInstruction(state, totalFish,
+			case COLLECT_THIRD_BATCH:
+				if (isStormAtLeast(state, STORM_LEAVE_THRESHOLD)
+					&& state.getRawHarpoonfish() > 0)
+				{
+					return progress("Cook fish", stormGuidance(state,
+						"Cook what remains and leave for the ammunition crate."),
+						TemporossInstruction.Type.COOK, "Cooked harpoonfish",
+						state.getCookedHarpoonfish() + " / " + FULL_BATCH_TARGET, false);
+				}
+				return batchCollectionInstruction(state, FULL_BATCH_TARGET,
 					stormGuidance(state,
 						"Catch the second 19-fish batch before storm intensity becomes unsafe."));
-			case COOK_THIRD_BATCH:
-				return progress("Cook the batch",
-					stormGuidance(state, "Cook all fish, then run to the ammunition crate."),
-					TemporossInstruction.Type.COOK, "Raw fish left",
-					Integer.toString(state.getRawHarpoonfish()), state.getRawHarpoonfish() == 0);
 			case LOAD_THIRD_BATCH:
 				return progress("Load the batch",
 					"Load every cooked fish into the ammunition crate.", TemporossInstruction.Type.LOAD,
@@ -420,32 +360,41 @@ public class TemporossStrategy
 			+ state.getWaterBuckets() + "/" + state.getBuckets() + " water";
 	}
 
-	private static TemporossInstruction batchCollectionInstruction(
+	private TemporossInstruction batchCollectionInstruction(
 		TemporossState state,
-		int totalFish,
+		int target,
 		String description)
 	{
-		TemporossInstruction.Type type;
-		String title;
+		int totalFish = totalFish(state);
+		if (totalFish >= target)
+		{
+			latchedCookingStage = stage;
+			return progress("Cook fish", description, TemporossInstruction.Type.COOK,
+				"Cooked harpoonfish", state.getCookedHarpoonfish() + " / " + target,
+				state.getCookedHarpoonfish() >= target);
+		}
 		if (state.isDoubleFishingSpotActive())
 		{
-			return doubleSpotProgress("Fish the double spot", description,
-				TemporossInstruction.Type.FISH, "Total fish",
-				totalFish + " / " + FULL_BATCH_TARGET, totalFish >= FULL_BATCH_TARGET);
+			latchedCookingStage = null;
+			return progressWithStatus("Fish the double spot", description,
+				TemporossInstruction.Type.FISH, "Total fish", totalFish + " / " + target,
+				false, "Double spot", "Active", true, true);
 		}
-		else if (state.getRawHarpoonfish() > 0)
+		if (state.getRawHarpoonfish() == 0)
 		{
-			title = "Cook fish";
-			type = TemporossInstruction.Type.COOK;
+			latchedCookingStage = null;
 		}
-		else
+		else if (latchedCookingStage == stage
+			|| state.getRawHarpoonfish() >= COOKING_THRESHOLD)
 		{
-			title = "Catch 19 fish";
-			type = TemporossInstruction.Type.FISH;
+			latchedCookingStage = stage;
+			return progress("Cook fish", description, TemporossInstruction.Type.COOK,
+				"Cooked harpoonfish", state.getCookedHarpoonfish() + " / " + target, false);
 		}
 
-		return progress(title, description, type, "Total fish",
-			totalFish + " / " + FULL_BATCH_TARGET, totalFish >= FULL_BATCH_TARGET);
+		return progressWithStatus("Catch " + target + " fish", description,
+			TemporossInstruction.Type.FISH, "Total fish", totalFish + " / " + target,
+			false, "Double spot", "Inactive", false, false);
 	}
 
 	private static boolean isStormAtLeast(TemporossState state, int threshold)
@@ -456,13 +405,9 @@ public class TemporossStrategy
 
 	private static String stormGuidance(TemporossState state, String normalGuidance)
 	{
-		if (isStormAtLeast(state, HARD_LEAVE_STORM))
+		if (isStormAtLeast(state, STORM_LEAVE_THRESHOLD))
 		{
 			return "Storm is at least 93%: leave for the ship and load what is cooked now.";
-		}
-		if (isStormAtLeast(state, LEAVE_FOR_SHIP_STORM))
-		{
-			return "Storm is at least 90%: finish safely and leave for the ship now if fire blocks the path.";
 		}
 		return normalGuidance;
 	}
@@ -489,6 +434,7 @@ public class TemporossStrategy
 
 	private static TemporossInstruction progressWithStatus(
 		String title,
+		String description,
 		TemporossInstruction.Type type,
 		String progressLabel,
 		String progressText,
@@ -498,21 +444,9 @@ public class TemporossStrategy
 		boolean statusSatisfied,
 		boolean doubleFishingSpotPreferred)
 	{
-		return new TemporossInstruction(title, "", null, type,
+		return new TemporossInstruction(title, description, null, type,
 			progressLabel, progressText, progressSatisfied,
 			statusLabel, statusText, statusSatisfied, doubleFishingSpotPreferred);
-	}
-
-	private static TemporossInstruction doubleSpotProgress(
-		String title,
-		String description,
-		TemporossInstruction.Type type,
-		String progressLabel,
-		String progressText,
-		boolean satisfied)
-	{
-		return new TemporossInstruction(title, description, null, type,
-			progressLabel, progressText, satisfied, null, null, null, true);
 	}
 
 	private static TemporossInstruction progress(

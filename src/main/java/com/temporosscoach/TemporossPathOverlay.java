@@ -6,6 +6,7 @@ import java.awt.Graphics2D;
 import java.awt.Polygon;
 import javax.inject.Inject;
 import net.runelite.api.Client;
+import net.runelite.api.NPC;
 import net.runelite.api.Perspective;
 import net.runelite.api.WorldView;
 import net.runelite.api.coords.LocalPoint;
@@ -69,9 +70,15 @@ final class TemporossPathOverlay extends Overlay
 			return config.waveTimerColor();
 		}
 		TemporossInstruction instruction = plugin.getInstruction();
-		if (instruction.isDoubleFishingSpotPreferred())
+		Object target = plugin.getGuidancePathTarget();
+		if (target instanceof NPC
+			&& plugin.getDoubleFishingSpots().contains(target))
 		{
 			return config.doubleFishingSpotColor();
+		}
+		if (instruction.getType() == TemporossInstruction.Type.FISH)
+		{
+			return config.fishingSpotColor();
 		}
 		if (instruction.getType() == TemporossInstruction.Type.COOK)
 		{

@@ -41,9 +41,20 @@ class TemporossObjectOverlay extends Overlay
 	@Override
 	public Dimension render(Graphics2D graphics)
 	{
+		if (plugin.isWaveIncoming())
+		{
+			renderWaveTarget(graphics);
+			return null;
+		}
+
 		if (config.fireTimerMode() != TemporossTimerMode.OFF)
 		{
 			renderFires(graphics);
+		}
+		if (plugin.getInstruction().getType() == TemporossInstruction.Type.DOUSE_FIRE
+			&& config.highlightTargetShipFire())
+		{
+			renderTargetShipFires(graphics);
 		}
 		if (config.highlightDamagedTetherPoints())
 		{
@@ -98,7 +109,6 @@ class TemporossObjectOverlay extends Overlay
 			renderNearestSpiritPool(graphics);
 		}
 
-		renderWaveTimers(graphics);
 		return null;
 	}
 
@@ -153,6 +163,23 @@ class TemporossObjectOverlay extends Overlay
 		}
 	}
 
+	private void renderTargetShipFires(Graphics2D graphics)
+	{
+		for (GameObject fire : plugin.getShipFires())
+		{
+			Shape shape = fire.getClickbox();
+			if (shape == null)
+			{
+				shape = fire.getConvexHull();
+			}
+			if (shape == null)
+			{
+				shape = fire.getCanvasTilePoly();
+			}
+			renderHull(graphics, shape, config.targetShipFireColor());
+		}
+	}
+
 	private void renderDamagedTetherPoints(Graphics2D graphics)
 	{
 		Object waveTarget = plugin.isWaveIncoming() ? plugin.getWaveTetherTarget() : null;
@@ -170,19 +197,10 @@ class TemporossObjectOverlay extends Overlay
 		}
 	}
 
-	private void renderWaveTimers(Graphics2D graphics)
+	private void renderWaveTarget(Graphics2D graphics)
 	{
 		Instant impactTime = plugin.getWaveImpactTime();
 		TemporossTimerMode timerMode = config.waveTimerMode();
-		if (timerMode == TemporossTimerMode.OFF || !plugin.isWaveIncoming() || impactTime == null)
-		{
-			return;
-		}
-
-		long remainingMillis = Math.max(0, impactTime.toEpochMilli() - Instant.now().toEpochMilli());
-		Instant now = Instant.now();
-		Instant startTime = impactTime.minusMillis(TemporossCoachPlugin.WAVE_IMPACT_MILLIS);
-
 		Object target = plugin.getWaveTetherTarget();
 		if (!(target instanceof GameObject))
 		{
@@ -202,8 +220,14 @@ class TemporossObjectOverlay extends Overlay
 			}
 			renderHull(graphics, shape, color);
 
-			renderTimer(graphics, tetherPoint, timerMode, color, remainingMillis,
-				startTime, TemporossCoachPlugin.WAVE_IMPACT_MILLIS, now);
+			if (timerMode != TemporossTimerMode.OFF && impactTime != null)
+			{
+				Instant now = Instant.now();
+				long remainingMillis = Math.max(0, impactTime.toEpochMilli() - now.toEpochMilli());
+				Instant startTime = impactTime.minusMillis(TemporossCoachPlugin.WAVE_IMPACT_MILLIS);
+				renderTimer(graphics, tetherPoint, timerMode, color, remainingMillis,
+					startTime, TemporossCoachPlugin.WAVE_IMPACT_MILLIS, now);
+			}
 		}
 	}
 
@@ -298,7 +322,10 @@ class TemporossObjectOverlay extends Overlay
 		{
 			return;
 		}
-		NPC nearest = nearestNpc(plugin.getFishingSpots());
+		NPC selected = plugin.getNormalFishingSpotTarget();
+		NPC nearest = selected != null && plugin.getFishingSpots().contains(selected)
+			? selected
+			: nearestNpc(plugin.getFishingSpots());
 		if (nearest != null)
 		{
 			renderHull(graphics, nearest.getConvexHull(), config.fishingSpotColor());

@@ -46,6 +46,31 @@ public interface TemporossCoachConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "highlightTargetShipFire",
+		name = "Highlight target ship fire",
+		description = "Adds a clickbox highlight to ship fires when dousing one is the current target",
+		section = sceneHighlights,
+		position = 4
+	)
+	default boolean highlightTargetShipFire()
+	{
+		return true;
+	}
+
+	@Alpha
+	@ConfigItem(
+		keyName = "targetShipFireColor",
+		name = "Target ship fire color",
+		description = "Color of the target ship fire clickbox highlight",
+		section = sceneHighlights,
+		position = 5
+	)
+	default Color targetShipFireColor()
+	{
+		return Color.CYAN;
+	}
+
+	@ConfigItem(
 		keyName = "highlightFishingSpots",
 		name = "Highlight fishing spot",
 		description = "Highlights the nearest normal harpoonfish spot while fishing",
@@ -253,11 +278,23 @@ public interface TemporossCoachConfig extends Config
 	String targetPaths = "targetPaths";
 
 	@ConfigItem(
+		keyName = "pathToFishingSpot",
+		name = "Path to fishing spot",
+		description = "Draws a route when a normal fishing spot is the current target",
+		section = targetPaths,
+		position = 22
+	)
+	default boolean pathToFishingSpot()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 		keyName = "pathToDoubleFishingSpot",
 		name = "Path to double spot",
 		description = "Draws a route when a double fishing spot is the current target",
 		section = targetPaths,
-		position = 22
+		position = 23
 	)
 	default boolean pathToDoubleFishingSpot()
 	{
@@ -269,7 +306,7 @@ public interface TemporossCoachConfig extends Config
 		name = "Path to cooking shrine",
 		description = "Draws a route when a cooking shrine is the current target",
 		section = targetPaths,
-		position = 23
+		position = 24
 	)
 	default boolean pathToCookingShrine()
 	{
@@ -281,7 +318,7 @@ public interface TemporossCoachConfig extends Config
 		name = "Path to ammunition crate",
 		description = "Draws a route when an ammunition crate is the current target",
 		section = targetPaths,
-		position = 24
+		position = 25
 	)
 	default boolean pathToAmmunitionCrate()
 	{
@@ -293,7 +330,7 @@ public interface TemporossCoachConfig extends Config
 		name = "Path to tether point",
 		description = "Draws a route to the nearest mast or totem when a colossal wave is incoming",
 		section = targetPaths,
-		position = 25
+		position = 26
 	)
 	default boolean pathToTetherPoint()
 	{

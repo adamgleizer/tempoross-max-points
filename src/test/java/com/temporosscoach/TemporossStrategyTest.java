@@ -32,7 +32,7 @@ public class TemporossStrategyTest
 
 		TemporossInstruction instruction = new TemporossStrategy().getInstruction(state);
 
-		assertEquals("Catch harpoonfish", instruction.getTitle());
+		assertEquals("Catch 17 fish", instruction.getTitle());
 		assertEquals(TemporossInstruction.Type.FISH, instruction.getType());
 	}
 
@@ -60,7 +60,7 @@ public class TemporossStrategyTest
 		assertEquals(TemporossInstruction.Type.GET_BUCKETS, buckets.getType());
 
 		state.updateInventory(startingInventory());
-		assertEquals("Catch harpoonfish", strategy.getInstruction(state).getTitle());
+		assertEquals("Catch 17 fish", strategy.getInstruction(state).getTitle());
 	}
 
 	@Test
@@ -68,17 +68,17 @@ public class TemporossStrategyTest
 	{
 		TemporossStrategy strategy = new TemporossStrategy();
 		TemporossState state = encounterState();
-		assertEquals("Catch harpoonfish", strategy.getInstruction(state).getTitle());
+		assertEquals("Catch 17 fish", strategy.getInstruction(state).getTitle());
 
 		state.updateInventory(new TestItemContainer(new Item(ItemID.TEMPOROSS_RAW_HARPOONFISH, 1)));
 		TemporossInstruction instruction = strategy.getInstruction(state);
 
-		assertEquals("Catch harpoonfish", instruction.getTitle());
+		assertEquals("Catch 17 fish", instruction.getTitle());
 		assertEquals(TemporossInstruction.Type.FISH, instruction.getType());
 	}
 
 	@Test
-	public void requiresEightInitialFish()
+	public void keepsCookingAfterRawFishDropsBelowEight()
 	{
 		TemporossStrategy strategy = new TemporossStrategy();
 		TemporossState state = encounterState();
@@ -86,17 +86,25 @@ public class TemporossStrategyTest
 
 		setFish(state, 7, 0);
 		TemporossInstruction sevenFish = strategy.getInstruction(state);
-		assertEquals(TemporossStage.CATCH_INITIAL, strategy.getStage());
-		assertEquals("7 / 8", sevenFish.getProgressText());
+		assertEquals(TemporossStage.COLLECT_FIRST_BATCH, strategy.getStage());
+		assertEquals("Catch 17 fish", sevenFish.getTitle());
+		assertEquals("7 / 17", sevenFish.getProgressText());
 
 		setFish(state, 8, 0);
 		TemporossInstruction cooking = strategy.getInstruction(state);
-		assertEquals(TemporossStage.COOK_INITIAL, strategy.getStage());
+		assertEquals(TemporossStage.COLLECT_FIRST_BATCH, strategy.getStage());
+		assertEquals("Cook fish", cooking.getTitle());
 		assertEquals("0 / 17", cooking.getProgressText());
 
 		setFish(state, 3, 5);
 		TemporossInstruction partlyCooked = strategy.getInstruction(state);
+		assertEquals("Cook fish", partlyCooked.getTitle());
 		assertEquals("5 / 17", partlyCooked.getProgressText());
+
+		setFish(state, 0, 8);
+		TemporossInstruction finishedCooking = strategy.getInstruction(state);
+		assertEquals("Catch 17 fish", finishedCooking.getTitle());
+		assertEquals(TemporossInstruction.Type.FISH, finishedCooking.getType());
 	}
 
 	@Test
@@ -106,7 +114,7 @@ public class TemporossStrategyTest
 		TemporossState state = encounterState();
 		strategy.getInstruction(state);
 		setFish(state, 8, 0);
-		assertStage(strategy, state, TemporossStage.COOK_INITIAL);
+		assertStage(strategy, state, TemporossStage.COLLECT_FIRST_BATCH);
 
 		setFish(state, 2, 17);
 		TemporossInstruction instruction = strategy.getInstruction(state);
@@ -127,7 +135,7 @@ public class TemporossStrategyTest
 		state.setDoubleFishingSpotActive(true);
 		TemporossInstruction instruction = strategy.getInstruction(state);
 
-		assertEquals(TemporossStage.COOK_INITIAL, strategy.getStage());
+		assertEquals(TemporossStage.COLLECT_FIRST_BATCH, strategy.getStage());
 		assertEquals("Fish the double spot", instruction.getTitle());
 		assertEquals(TemporossInstruction.Type.FISH, instruction.getType());
 		assertTrue(instruction.isDoubleFishingSpotPreferred());
@@ -168,22 +176,22 @@ public class TemporossStrategyTest
 		TemporossStrategy strategy = new TemporossStrategy();
 		TemporossState state = encounterState();
 
-		assertStage(strategy, state, TemporossStage.CATCH_INITIAL);
+		assertStage(strategy, state, TemporossStage.COLLECT_FIRST_BATCH);
 		setFish(state, 8, 0);
-		assertStage(strategy, state, TemporossStage.COOK_INITIAL);
+		assertStage(strategy, state, TemporossStage.COLLECT_FIRST_BATCH);
 		setFish(state, 0, 8);
-		assertStage(strategy, state, TemporossStage.CATCH_FIRST_BATCH);
+		assertStage(strategy, state, TemporossStage.COLLECT_FIRST_BATCH);
 		setFish(state, 9, 8);
-		assertStage(strategy, state, TemporossStage.COOK_FIRST_BATCH);
+		assertStage(strategy, state, TemporossStage.COLLECT_FIRST_BATCH);
 		setFish(state, 0, 17);
 		assertStage(strategy, state, TemporossStage.LOAD_FIRST_BATCH);
 		setFish(state, 0, 0);
-		assertStage(strategy, state, TemporossStage.CATCH_SECOND_BATCH);
+		assertStage(strategy, state, TemporossStage.COLLECT_SECOND_BATCH);
 
 		setFish(state, 1, 0);
-		assertStage(strategy, state, TemporossStage.CATCH_SECOND_BATCH);
+		assertStage(strategy, state, TemporossStage.COLLECT_SECOND_BATCH);
 		setFish(state, 19, 0);
-		assertStage(strategy, state, TemporossStage.COOK_SECOND_BATCH);
+		assertStage(strategy, state, TemporossStage.COLLECT_SECOND_BATCH);
 		setFish(state, 0, 19);
 		assertStage(strategy, state, TemporossStage.LOAD_SECOND_BATCH);
 		state.setSpiritPoolActive(true);
@@ -193,11 +201,11 @@ public class TemporossStrategyTest
 		assertStage(strategy, state, TemporossStage.PREPARE_SECOND_PHASE);
 
 		setSecondPhaseReady(state);
-		assertStage(strategy, state, TemporossStage.CATCH_THIRD_BATCH);
+		assertStage(strategy, state, TemporossStage.COLLECT_THIRD_BATCH);
 		setFish(state, 1, 0);
-		assertStage(strategy, state, TemporossStage.CATCH_THIRD_BATCH);
+		assertStage(strategy, state, TemporossStage.COLLECT_THIRD_BATCH);
 		setFish(state, 19, 0);
-		assertStage(strategy, state, TemporossStage.COOK_THIRD_BATCH);
+		assertStage(strategy, state, TemporossStage.COLLECT_THIRD_BATCH);
 		setFish(state, 0, 19);
 		assertStage(strategy, state, TemporossStage.LOAD_THIRD_BATCH);
 		state.setSpiritPoolActive(true);
@@ -217,7 +225,7 @@ public class TemporossStrategyTest
 	}
 
 	@Test
-	public void ninetyPercentStormPrioritizesLoadingCookedSecondBatchFish()
+	public void stormPrioritizesLoadingSecondBatchFishAtNinetyThreePercent()
 	{
 		TemporossStrategy strategy = new TemporossStrategy();
 		TemporossState state = encounterState();
@@ -225,11 +233,33 @@ public class TemporossStrategyTest
 
 		state.setEncounterState(true, 4, 100, 90);
 		setFish(state, 8, 5);
+		TemporossInstruction belowThreshold = strategy.getInstruction(state);
+		assertEquals(TemporossStage.COLLECT_SECOND_BATCH, strategy.getStage());
+		assertEquals(TemporossInstruction.Type.COOK, belowThreshold.getType());
+
+		state.setEncounterState(true, 4, 100, 93);
 		TemporossInstruction instruction = strategy.getInstruction(state);
 
 		assertEquals(TemporossStage.LOAD_SECOND_BATCH, strategy.getStage());
 		assertEquals(TemporossInstruction.Type.LOAD, instruction.getType());
 		assertEquals("Load the batch", instruction.getTitle());
+	}
+
+	@Test
+	public void shipFireInterruptsSecondBatchCollection()
+	{
+		TemporossStrategy strategy = new TemporossStrategy();
+		TemporossState state = encounterState();
+		advanceToSecondBatch(strategy, state);
+
+		state.setShipFireActive(true);
+		TemporossInstruction instruction = strategy.getInstruction(state);
+
+		assertEquals("Douse ship fire", instruction.getTitle());
+		assertEquals(TemporossInstruction.Type.DOUSE_FIRE, instruction.getType());
+
+		state.setShipFireActive(false);
+		assertEquals(TemporossInstruction.Type.FISH, strategy.getInstruction(state).getType());
 	}
 
 	@Test
@@ -240,11 +270,16 @@ public class TemporossStrategyTest
 		advanceToSecondBatch(strategy, state);
 
 		setFish(state, 5, 0);
+		TemporossInstruction normalFishing = strategy.getInstruction(state);
+		assertEquals(TemporossStage.COLLECT_SECOND_BATCH, strategy.getStage());
+		assertEquals("Catch 19 fish", normalFishing.getTitle());
+		assertEquals(TemporossInstruction.Type.FISH, normalFishing.getType());
+		assertFalse(normalFishing.isDoubleFishingSpotPreferred());
+
+		setFish(state, 8, 0);
 		TemporossInstruction cooking = strategy.getInstruction(state);
-		assertEquals(TemporossStage.CATCH_SECOND_BATCH, strategy.getStage());
 		assertEquals("Cook fish", cooking.getTitle());
 		assertEquals(TemporossInstruction.Type.COOK, cooking.getType());
-		assertFalse(cooking.isDoubleFishingSpotPreferred());
 
 		state.setDoubleFishingSpotActive(true);
 		TemporossInstruction fishing = strategy.getInstruction(state);
@@ -272,7 +307,7 @@ public class TemporossStrategyTest
 		assertStage(strategy, state, TemporossStage.PREPARE_SECOND_PHASE);
 
 		setSecondPhaseReady(state);
-		assertStage(strategy, state, TemporossStage.CATCH_THIRD_BATCH);
+		assertStage(strategy, state, TemporossStage.COLLECT_THIRD_BATCH);
 	}
 
 	@Test
@@ -359,17 +394,17 @@ public class TemporossStrategyTest
 
 	private static void advanceToSecondBatch(TemporossStrategy strategy, TemporossState state)
 	{
-		assertStage(strategy, state, TemporossStage.CATCH_INITIAL);
+		assertStage(strategy, state, TemporossStage.COLLECT_FIRST_BATCH);
 		setFish(state, 8, 0);
-		assertStage(strategy, state, TemporossStage.COOK_INITIAL);
+		assertStage(strategy, state, TemporossStage.COLLECT_FIRST_BATCH);
 		setFish(state, 0, 8);
-		assertStage(strategy, state, TemporossStage.CATCH_FIRST_BATCH);
+		assertStage(strategy, state, TemporossStage.COLLECT_FIRST_BATCH);
 		setFish(state, 9, 8);
-		assertStage(strategy, state, TemporossStage.COOK_FIRST_BATCH);
+		assertStage(strategy, state, TemporossStage.COLLECT_FIRST_BATCH);
 		setFish(state, 0, 17);
 		assertStage(strategy, state, TemporossStage.LOAD_FIRST_BATCH);
 		setFish(state, 0, 0);
-		assertStage(strategy, state, TemporossStage.CATCH_SECOND_BATCH);
+		assertStage(strategy, state, TemporossStage.COLLECT_SECOND_BATCH);
 	}
 
 	private static void advanceToSecondPhasePreparation(
@@ -378,7 +413,7 @@ public class TemporossStrategyTest
 	{
 		advanceToSecondBatch(strategy, state);
 		setFish(state, 19, 0);
-		assertStage(strategy, state, TemporossStage.COOK_SECOND_BATCH);
+		assertStage(strategy, state, TemporossStage.COLLECT_SECOND_BATCH);
 		setFish(state, 0, 19);
 		assertStage(strategy, state, TemporossStage.LOAD_SECOND_BATCH);
 		state.setSpiritPoolActive(true);

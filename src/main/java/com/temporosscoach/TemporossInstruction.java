@@ -13,6 +13,7 @@ public final class TemporossInstruction
 		LOAD,
 		ATTACK,
 		SAFETY,
+		DOUSE_FIRE,
 		GET_ROPE,
 		GET_HAMMER,
 		GET_BUCKETS
