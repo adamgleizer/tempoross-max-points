@@ -465,11 +465,20 @@ public class TemporossCoachPlugin extends Plugin
 	@Subscribe
 	public void onNpcChanged(NpcChanged event)
 	{
-		if (event.getNpc() == completedPathTarget)
+		NPC npc = event.getNpc();
+		if (npc == guidancePathTarget)
+		{
+			clearGuidancePath();
+		}
+		if (npc == completedPathTarget)
 		{
 			completedPathTarget = null;
 		}
-		updateTrackedNpc(event.getNpc());
+		if (npc == normalFishingSpotTarget)
+		{
+			normalFishingSpotTarget = null;
+		}
+		updateTrackedNpc(npc);
 	}
 
 	@Subscribe
@@ -743,7 +752,6 @@ public class TemporossCoachPlugin extends Plugin
 
 	private void updateTrackedNpc(NPC npc)
 	{
-		boolean wasSelectedDoubleSpot = npc == guidancePathTarget;
 		activeSpiritPools.remove(npc);
 		fishingSpots.remove(npc);
 		doubleFishingSpots.remove(npc);
@@ -777,14 +785,6 @@ public class TemporossCoachPlugin extends Plugin
 		if (normalFishingSpotTarget != null && !fishingSpots.contains(normalFishingSpotTarget))
 		{
 			normalFishingSpotTarget = null;
-		}
-		if (wasSelectedDoubleSpot && !doubleFishingSpots.contains(npc))
-		{
-			if (npc == completedPathTarget)
-			{
-				completedPathTarget = null;
-			}
-			clearGuidancePath();
 		}
 	}
 

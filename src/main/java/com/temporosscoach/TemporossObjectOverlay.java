@@ -118,26 +118,42 @@ class TemporossObjectOverlay extends Overlay
 		else if (instructionType == TemporossInstruction.Type.ATTACK
 			&& config.highlightSpiritPool())
 		{
-			renderNearestSpiritPool(graphics);
+			renderNorthernSpiritPool(graphics);
 		}
 
 		return null;
 	}
 
-	private void renderNearestSpiritPool(Graphics2D graphics)
+	private void renderNorthernSpiritPool(Graphics2D graphics)
 	{
-		NPC nearest = nearestNpc(plugin.getActiveSpiritPools());
-		if (nearest == null)
+		NPC northern = northernmostNpc(plugin.getActiveSpiritPools());
+		if (northern == null)
 		{
 			return;
 		}
 
-		Shape shape = nearest.getConvexHull();
+		Shape shape = northern.getConvexHull();
 		if (shape == null)
 		{
-			shape = nearest.getCanvasTilePoly();
+			shape = northern.getCanvasTilePoly();
 		}
 		renderHull(graphics, shape, config.spiritPoolColor());
+	}
+
+	private static NPC northernmostNpc(Iterable<NPC> npcs)
+	{
+		NPC northern = null;
+		int northernEdge = Integer.MIN_VALUE;
+		for (NPC npc : npcs)
+		{
+			int edge = npc.getWorldArea().getY() + npc.getWorldArea().getHeight() - 1;
+			if (edge > northernEdge)
+			{
+				northern = npc;
+				northernEdge = edge;
+			}
+		}
+		return northern;
 	}
 
 	private void renderNearestSupply(Graphics2D graphics, Iterable<GameObject> supplies)

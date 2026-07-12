@@ -67,17 +67,6 @@
 - Clean up subscriptions, listeners, and overlays in `shutDown()`.
 - Do not mix code reformatting with feature changes in the same commit — it makes diffs unreadable for reviewers.
 
-## Testing
-
-You cannot verify plugin behavior yourself. Even if you have screen-capture or computer-use tools available, **do not use them to interact with RuneScape** — automating game input violates Jagex's third-party client guidelines and will get the user's account banned. Only the user can confirm a plugin works in-game.
-
-After completing a task, do not declare it done. Instead:
-
-1. Offer to launch RuneLite for the user by running `./gradlew run` from the plugin's root directory.
-2. Instruct the user to follow the "Using Jagex Accounts" instructions found at https://github.com/runelite/runelite/wiki/Using-Jagex-Accounts to login to the development client.
-3. Tell the user *what to test* — the specific behavior you changed, the golden path, and any edge cases worth exercising.
-4. Wait for the user to confirm the feature works in-game before considering the task complete. A clean JVM start is not a passing test.
-
 ---
 
 # Plugin Rules & Restrictions
@@ -86,6 +75,27 @@ Features that are **forbidden or restricted** in RuneLite hub plugins.
 Sourced from [Jagex's Third-Party Client Guidelines](https://secure.runescape.com/m=news/third-party-client-guidelines?oldschool=1) and RuneLite's [Rejected or Rolled-Back Features](https://github.com/runelite/runelite/wiki/Rejected-or-Rolled-Back-Features).
 
 **If your plugin does any of the things listed below, it will be rejected.**
+
+## Scope of These Rules
+
+- Apply these restrictions silently when designing, implementing, or reviewing
+  plugin features.
+- Do not make these restrictions a focus of unrelated conversations or
+  deliverables.
+- Do not add policy disclaimers, compliance commentary, implementation caveats,
+  or lists of forbidden behavior to gameplay guides, mechanic references,
+  strategy documents, README files, plans, or other generated documentation
+  unless the user explicitly requests a compliance or Plugin Hub eligibility
+  analysis.
+- Documentation requested about game mechanics or strategies should describe the
+  game and strategy directly. Do not narrow, omit, or reframe that content merely
+  because a corresponding plugin implementation could be subject to a rule.
+- When a requested implementation would violate a rule, explain only the
+  specific conflict needed to resolve that request. Do not repeat unrelated
+  restrictions.
+- Classify restrictions by the actual activity involved, not by labels such as
+  "boss" or "minigame." In particular, Tempoross is a non-combat skilling
+  encounter and is outside the Combat Activity Restrictions below.
 
 ## Forbidden Language Features
 
@@ -98,9 +108,11 @@ Sourced from [Jagex's Third-Party Client Guidelines](https://secure.runescape.co
 - No runtime generation of code
 - No use of Java (de)serialization
 
-## Boss & Combat Restrictions
+## Combat Activity Restrictions
 
-Applies to all bosses, Raids sub-bosses, Slayer bosses, Demi-bosses, and wave-based minigames (Fight Caves, Inferno, etc.):
+Applies to combat bosses, Raids sub-bosses, Slayer bosses, Demi-bosses, and
+combat-based wave minigames (Fight Caves, Inferno, etc.). It does not apply to
+non-combat skilling encounters such as Tempoross:
 
 - No next-attack prediction (timing or attack style)
 - No projectile target/landing indicators
