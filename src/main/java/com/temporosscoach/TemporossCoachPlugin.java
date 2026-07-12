@@ -4,6 +4,7 @@ import com.google.inject.Provides;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -120,6 +121,7 @@ public class TemporossCoachPlugin extends Plugin
 	private final Set<GameObject> cookingShrines = Collections.newSetFromMap(new IdentityHashMap<>());
 	private final Map<GameObject, TemporossTimedObject> fireObjects = new IdentityHashMap<>();
 	private final Set<GameObject> shipFires = Collections.newSetFromMap(new IdentityHashMap<>());
+	private final Set<GameObject> pathFires = Collections.newSetFromMap(new IdentityHashMap<>());
 	private final Set<GameObject> tetherPoints = Collections.newSetFromMap(new IdentityHashMap<>());
 	private final Set<GameObject> ropeSupplies = Collections.newSetFromMap(new IdentityHashMap<>());
 	private final Set<GameObject> hammerSupplies = Collections.newSetFromMap(new IdentityHashMap<>());
@@ -191,6 +193,7 @@ public class TemporossCoachPlugin extends Plugin
 		cookingShrines.clear();
 		fireObjects.clear();
 		shipFires.clear();
+		pathFires.clear();
 		tetherPoints.clear();
 		ropeSupplies.clear();
 		hammerSupplies.clear();
@@ -238,6 +241,7 @@ public class TemporossCoachPlugin extends Plugin
 		instruction = strategy.getInstruction(state);
 		updateWaveTetherTarget();
 		updateGuidancePath();
+		updatePathFires();
 		wasInEncounter = state.isInEncounter();
 	}
 
@@ -416,6 +420,7 @@ public class TemporossCoachPlugin extends Plugin
 		cookingShrines.clear();
 		fireObjects.clear();
 		shipFires.clear();
+		pathFires.clear();
 		tetherPoints.clear();
 		ropeSupplies.clear();
 		hammerSupplies.clear();
@@ -506,6 +511,7 @@ public class TemporossCoachPlugin extends Plugin
 		cookingShrines.remove(gameObject);
 		fireObjects.remove(gameObject);
 		shipFires.remove(gameObject);
+		pathFires.remove(gameObject);
 		tetherPoints.remove(gameObject);
 		ropeSupplies.remove(gameObject);
 		hammerSupplies.remove(gameObject);
@@ -591,6 +597,7 @@ public class TemporossCoachPlugin extends Plugin
 		cookingShrines.remove(gameObject);
 		fireObjects.remove(gameObject);
 		shipFires.remove(gameObject);
+		pathFires.remove(gameObject);
 		tetherPoints.remove(gameObject);
 		ropeSupplies.remove(gameObject);
 		hammerSupplies.remove(gameObject);
@@ -653,6 +660,45 @@ public class TemporossCoachPlugin extends Plugin
 			}
 		}
 		state.setShipFireActive(!shipFires.isEmpty());
+	}
+
+	private void updatePathFires()
+	{
+		pathFires.clear();
+		if (guidancePath.isEmpty())
+		{
+			return;
+		}
+
+		Set<WorldPoint> pathTiles = new HashSet<>(guidancePath);
+		for (GameObject fire : fireObjects.keySet())
+		{
+			if (fire.getId() != ObjectID.TEMPOROSS_FIRE_VISUALS)
+			{
+				continue;
+			}
+			WorldArea fireArea = pathTargetArea(fire);
+			if (areaIntersectsPath(fireArea, pathTiles))
+			{
+				pathFires.add(fire);
+			}
+		}
+	}
+
+	static boolean areaIntersectsPath(WorldArea area, Iterable<WorldPoint> pathTiles)
+	{
+		if (area == null)
+		{
+			return false;
+		}
+		for (WorldPoint pathTile : pathTiles)
+		{
+			if (area.contains(pathTile))
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private void migrateTimerMode(String oldKey, String newKey)
@@ -1102,6 +1148,7 @@ public class TemporossCoachPlugin extends Plugin
 		guidancePathTarget = null;
 		guidancePathDestination = null;
 		guidancePath = Collections.emptyList();
+		pathFires.clear();
 	}
 
 	TemporossState getState()
@@ -1176,6 +1223,11 @@ public class TemporossCoachPlugin extends Plugin
 	Set<GameObject> getShipFires()
 	{
 		return shipFires;
+	}
+
+	Set<GameObject> getPathFires()
+	{
+		return pathFires;
 	}
 
 	Set<GameObject> getTetherPoints()

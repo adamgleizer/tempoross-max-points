@@ -71,6 +71,31 @@ public interface TemporossCoachConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "highlightPathFires",
+		name = "Highlight fires in path",
+		description = "Adds a clickbox highlight to active fires intersecting the current target path",
+		section = sceneHighlights,
+		position = 6
+	)
+	default boolean highlightPathFires()
+	{
+		return true;
+	}
+
+	@Alpha
+	@ConfigItem(
+		keyName = "pathFireColor",
+		name = "Path fire color",
+		description = "Color of fire clickbox highlights along the current target path",
+		section = sceneHighlights,
+		position = 7
+	)
+	default Color pathFireColor()
+	{
+		return Color.CYAN;
+	}
+
+	@ConfigItem(
 		keyName = "highlightFishingSpots",
 		name = "Highlight fishing spot",
 		description = "Highlights the nearest normal harpoonfish spot while fishing",

@@ -7,7 +7,7 @@ public class TemporossStrategy
 	private static final int FIRST_BATCH_TARGET = 17;
 	private static final int FULL_BATCH_TARGET = 19;
 	private static final int FINAL_FISH_TARGET = 2;
-	private static final int STORM_LEAVE_THRESHOLD = 93;
+	private static final int STORM_LEAVE_THRESHOLD = 91;
 	private static final int ESSENCE_GOAL = 50;
 
 	private TemporossStage stage = TemporossStage.COLLECT_FIRST_BATCH;

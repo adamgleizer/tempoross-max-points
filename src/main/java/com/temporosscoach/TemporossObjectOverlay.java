@@ -43,6 +43,14 @@ class TemporossObjectOverlay extends Overlay
 	{
 		if (plugin.isWaveIncoming())
 		{
+			if (config.fireTimerMode() != TemporossTimerMode.OFF)
+			{
+				renderFires(graphics, plugin.getPathFires());
+			}
+			if (config.highlightPathFires())
+			{
+				renderFireClickboxes(graphics, plugin.getPathFires(), config.pathFireColor());
+			}
 			renderWaveTarget(graphics);
 			return null;
 		}
@@ -55,6 +63,10 @@ class TemporossObjectOverlay extends Overlay
 			&& config.highlightTargetShipFire())
 		{
 			renderTargetShipFires(graphics);
+		}
+		if (config.highlightPathFires())
+		{
+			renderFireClickboxes(graphics, plugin.getPathFires(), config.pathFireColor());
 		}
 		if (config.highlightDamagedTetherPoints())
 		{
@@ -146,11 +158,20 @@ class TemporossObjectOverlay extends Overlay
 
 	private void renderFires(Graphics2D graphics)
 	{
+		renderFires(graphics, plugin.getFireObjects().keySet());
+	}
+
+	private void renderFires(Graphics2D graphics, Iterable<GameObject> fires)
+	{
 		Instant now = Instant.now();
-		for (Map.Entry<GameObject, TemporossTimedObject> entry : plugin.getFireObjects().entrySet())
+		Map<GameObject, TemporossTimedObject> timedFires = plugin.getFireObjects();
+		for (GameObject fire : fires)
 		{
-			GameObject fire = entry.getKey();
-			TemporossTimedObject timedObject = entry.getValue();
+			TemporossTimedObject timedObject = timedFires.get(fire);
+			if (timedObject == null)
+			{
+				continue;
+			}
 			renderTile(graphics, fire, config.fireColor());
 
 			long duration = timedObject.getDurationMillis();
@@ -165,7 +186,15 @@ class TemporossObjectOverlay extends Overlay
 
 	private void renderTargetShipFires(Graphics2D graphics)
 	{
-		for (GameObject fire : plugin.getShipFires())
+		renderFireClickboxes(graphics, plugin.getShipFires(), config.targetShipFireColor());
+	}
+
+	private static void renderFireClickboxes(
+		Graphics2D graphics,
+		Iterable<GameObject> fires,
+		Color color)
+	{
+		for (GameObject fire : fires)
 		{
 			Shape shape = fire.getClickbox();
 			if (shape == null)
@@ -176,7 +205,7 @@ class TemporossObjectOverlay extends Overlay
 			{
 				shape = fire.getCanvasTilePoly();
 			}
-			renderHull(graphics, shape, config.targetShipFireColor());
+			renderHull(graphics, shape, color);
 		}
 	}
 

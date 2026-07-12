@@ -50,8 +50,10 @@ class TemporossPreparationOverlay extends OverlayPanel
 			.text("Checklist")
 			.color(ACCENT_COLOR)
 			.build());
-		addRequirement("Rope", state.getRope() >= 1, state.getRope() + " / 1");
-		addRequirement("Hammer", state.getHammer() >= 1, state.getHammer() + " / 1");
+		addRequirement("Rope", state.getRope() >= 1,
+			state.getRope() >= 1 ? "Ready" : "Missing");
+		addRequirement("Hammer", state.getHammer() >= 1,
+			state.getHammer() >= 1 ? "Ready" : "Missing");
 		addRequirement("Humidify", state.hasHumidifyRunes(),
 			state.hasHumidifyRunes() ? "Ready" : "Missing");
 		addRequirement("Harpoon", state.getHarpoons() >= 1, state.getHarpoons() >= 1 ? "Ready" : "Missing");

@@ -54,8 +54,10 @@ class TemporossStepOverlay extends OverlayPanel {
                 || instruction.getType() == TemporossInstruction.Type.GET_HAMMER
                 || instruction.getType() == TemporossInstruction.Type.GET_BUCKETS) {
             TemporossState state = plugin.getState();
-            addRequirement("Rope", state.getRope() >= 1, state.getRope() + " / 1");
-            addRequirement("Hammer", state.getHammer() >= 1, state.getHammer() + " / 1");
+            addRequirement("Rope", state.getRope() >= 1,
+                    state.getRope() >= 1 ? "Ready" : "Missing");
+            addRequirement("Hammer", state.getHammer() >= 1,
+                    state.getHammer() >= 1 ? "Ready" : "Missing");
             addRequirement(
                     "Free slots",
                     state.getFreeInventorySlots() <= 19,
