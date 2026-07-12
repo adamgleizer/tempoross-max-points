@@ -146,6 +146,7 @@ public class TemporossCoachPlugin extends Plugin
 	private GameObject waveTetherTarget;
 	private NPC normalFishingSpotTarget;
 	private TemporossInstruction instruction = TemporossStrategy.placeholderInstruction();
+	private String targetNotificationKey;
 
 	@Provides
 	TemporossCoachConfig provideConfig(ConfigManager configManager)
@@ -211,6 +212,7 @@ public class TemporossCoachPlugin extends Plugin
 		state.clear();
 		strategy.reset();
 		instruction = TemporossStrategy.placeholderInstruction();
+		targetNotificationKey = null;
 		log.debug("Tempoross Coach stopped");
 	}
 
@@ -246,12 +248,27 @@ public class TemporossCoachPlugin extends Plugin
 		state.setTethered(client.getVarbitValue(VarbitID.TEMPOROSS_TETHERED) > 0);
 		updateLoadingState();
 		pruneStaleTetherPoints();
-		instruction = strategy.getInstruction(state);
+		TemporossInstruction nextInstruction = strategy.getInstruction(state);
+		updateTargetNotification(nextInstruction);
+		instruction = nextInstruction;
 		updateWaveTetherTarget();
 		updateGuidancePath();
 		updatePathFires();
 		updateFirefightingTargets();
 		wasInEncounter = state.isInEncounter();
+	}
+
+	private void updateTargetNotification(TemporossInstruction nextInstruction)
+	{
+		String nextKey = nextInstruction.getType() + "|" + nextInstruction.getTitle()
+			+ "|" + nextInstruction.isDoubleFishingSpotPreferred();
+		if (targetNotificationKey != null
+			&& !targetNotificationKey.equals(nextKey)
+			&& config.targetNotification().isEnabled())
+		{
+			notifier.notify(config.targetNotification(), "New target: " + nextInstruction.getTitle());
+		}
+		targetNotificationKey = nextKey;
 	}
 
 	private void updateLoadingState()
@@ -1031,7 +1048,8 @@ public class TemporossCoachPlugin extends Plugin
 		{
 			return nearestPathTarget(hammerSupplies);
 		}
-		if (instruction.getType() == TemporossInstruction.Type.GET_BUCKETS)
+		if (instruction.getType() == TemporossInstruction.Type.GET_BUCKETS
+			|| instruction.getType() == TemporossInstruction.Type.FILL_BUCKETS)
 		{
 			return nearestPathTarget(bucketSupplies);
 		}
@@ -1047,11 +1065,15 @@ public class TemporossCoachPlugin extends Plugin
 		}
 		if (instruction.getType() == TemporossInstruction.Type.LOAD)
 		{
+			if (strategy.getStage() == TemporossStage.LOAD_FINAL_FISH)
+			{
+				return nearestPathTarget(ammunitionCrates);
+			}
 			return NORTH_AMMUNITION_CRATE_INTERACTION_TILE;
 		}
 		if (instruction.getType() == TemporossInstruction.Type.ATTACK)
 		{
-			return getNorthernSpiritPool();
+			return getTargetSpiritPool();
 		}
 		return null;
 	}
@@ -1066,7 +1088,8 @@ public class TemporossCoachPlugin extends Plugin
 	{
 		return instruction.getType() == TemporossInstruction.Type.GET_ROPE
 			|| instruction.getType() == TemporossInstruction.Type.GET_HAMMER
-			|| instruction.getType() == TemporossInstruction.Type.GET_BUCKETS;
+			|| instruction.getType() == TemporossInstruction.Type.GET_BUCKETS
+			|| instruction.getType() == TemporossInstruction.Type.FILL_BUCKETS;
 	}
 
 	private Object nearestPathTarget(Iterable<?> targets)
@@ -1337,6 +1360,16 @@ public class TemporossCoachPlugin extends Plugin
 			}
 		}
 		return northern;
+	}
+
+	NPC getTargetSpiritPool()
+	{
+		if (strategy.getStage() == TemporossStage.FINISH_TEMPOROSS)
+		{
+			Object nearest = nearestPathTarget(activeSpiritPools);
+			return nearest instanceof NPC ? (NPC) nearest : null;
+		}
+		return getNorthernSpiritPool();
 	}
 
 	Map<GameObject, TemporossTimedObject> getFireObjects()

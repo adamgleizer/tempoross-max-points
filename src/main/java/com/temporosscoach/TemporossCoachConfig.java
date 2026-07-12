@@ -390,7 +390,7 @@ public interface TemporossCoachConfig extends Config
 	@ConfigItem(
 		keyName = "pathToSpiritPool",
 		name = "Path to spirit pool",
-		description = "Draws a route to the north spirit pool when attacking Tempoross",
+		description = "Draws a route to the strategy's target spirit pool when attacking Tempoross",
 		section = targetPaths,
 		position = 27
 	)
@@ -409,6 +409,18 @@ public interface TemporossCoachConfig extends Config
 	default boolean pathToMissingSupplies()
 	{
 		return true;
+	}
+
+	@ConfigItem(
+		keyName = "targetNotification",
+		name = "Target change notification",
+		description = "Notifies when the recommended action changes",
+		section = targetPaths,
+		position = 29
+	)
+	default Notification targetNotification()
+	{
+		return Notification.OFF;
 	}
 
 	@ConfigSection(

@@ -10,6 +10,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 public class TemporossStrategyTest
@@ -302,6 +303,10 @@ public class TemporossStrategyTest
 		state.setEncounterState(true, 100, 45, 0);
 		assertStage(strategy, state, TemporossStage.ATTACK_SECOND_POOL);
 		state.setSpiritPoolActive(false);
+		TemporossInstruction bucketPreparation = strategy.getInstruction(state);
+		assertEquals(TemporossInstruction.Type.FILL_BUCKETS, bucketPreparation.getType());
+		assertEquals("19 / 2", bucketPreparation.getProgressText());
+		setFinalBucketInventory(state);
 		TemporossInstruction finalPreparation = strategy.getInstruction(state);
 		assertEquals(TemporossStage.EXTINGUISH_FIRES, strategy.getStage());
 		assertEquals("0 / 2", finalPreparation.getProgressText());
@@ -364,6 +369,27 @@ public class TemporossStrategyTest
 
 		state.setShipFireActive(false);
 		assertEquals(TemporossInstruction.Type.FISH, strategy.getInstruction(state).getType());
+
+		state.setShipFireActive(true);
+		TemporossInstruction afterRespawn = strategy.getInstruction(state);
+		assertEquals(TemporossInstruction.Type.FISH, afterRespawn.getType());
+		assertNotEquals("Douse ship fire", afterRespawn.getTitle());
+	}
+
+	@Test
+	public void shipFireCanBecomeTheTargetAfterSecondBatchCollectionStarts()
+	{
+		TemporossStrategy strategy = new TemporossStrategy();
+		TemporossState state = encounterState();
+		advanceToSecondBatch(strategy, state);
+
+		state.setShipFireActive(false);
+		assertEquals(TemporossInstruction.Type.FISH, strategy.getInstruction(state).getType());
+
+		state.setShipFireActive(true);
+		TemporossInstruction instruction = strategy.getInstruction(state);
+		assertEquals("Douse ship fire", instruction.getTitle());
+		assertEquals(TemporossInstruction.Type.DOUSE_FIRE, instruction.getType());
 	}
 
 	@Test
@@ -415,6 +441,30 @@ public class TemporossStrategyTest
 		assertEquals("Recovery fish ready", strategy.getInstruction(state).getTitle());
 		state.setSpiritPoolActive(false);
 		assertStage(strategy, state, TemporossStage.LOAD_RECOVERY_BATCH);
+	}
+
+	@Test
+	public void attacksPoolCreatedByCompletedRecoveryLoad()
+	{
+		TemporossStrategy strategy = new TemporossStrategy();
+		TemporossState state = encounterState();
+		advanceToRecoveryPool(strategy, state, 10);
+		state.setSpiritPoolActive(false);
+		assertStage(strategy, state, TemporossStage.COLLECT_RECOVERY_BATCH);
+		setFish(state, 0, 9);
+		assertStage(strategy, state, TemporossStage.LOAD_RECOVERY_BATCH);
+
+		setFish(state, 0, 0);
+		assertLoadedStage(strategy, state, TemporossStage.COLLECT_THIRD_BATCH);
+
+		state.setSpiritPoolActive(true);
+		TemporossInstruction attack = strategy.getInstruction(state);
+		assertEquals(TemporossStage.ATTACK_RECOVERY_POOL, strategy.getStage());
+		assertEquals(TemporossInstruction.Type.ATTACK, attack.getType());
+		assertEquals("Fish the spirit pool", attack.getTitle());
+
+		state.setSpiritPoolActive(false);
+		assertStage(strategy, state, TemporossStage.COLLECT_THIRD_BATCH);
 	}
 
 	@Test
@@ -613,6 +663,19 @@ public class TemporossStrategyTest
 		if (cooked > 0)
 		{
 			items.add(new Item(ItemID.TEMPOROSS_HARPOONFISH, cooked));
+		}
+		state.updateInventory(new TestItemContainer(items.toArray(new Item[0])));
+	}
+
+	private static void setFinalBucketInventory(TemporossState state)
+	{
+		List<Item> items = new ArrayList<>();
+		items.add(new Item(ItemID.ROPE, 1));
+		items.add(new Item(ItemID.HAMMER, 1));
+		items.add(new Item(ItemID.BH_RUNE_POUCH, 1));
+		for (int i = 0; i < 23; i++)
+		{
+			items.add(new Item(ItemID.BUCKET_EMPTY, 1));
 		}
 		state.updateInventory(new TestItemContainer(items.toArray(new Item[0])));
 	}

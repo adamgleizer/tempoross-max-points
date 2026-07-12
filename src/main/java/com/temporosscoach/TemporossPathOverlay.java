@@ -72,7 +72,8 @@ final class TemporossPathOverlay extends Overlay
 		TemporossInstruction instruction = plugin.getInstruction();
 		if (instruction.getType() == TemporossInstruction.Type.GET_ROPE
 			|| instruction.getType() == TemporossInstruction.Type.GET_HAMMER
-			|| instruction.getType() == TemporossInstruction.Type.GET_BUCKETS)
+			|| instruction.getType() == TemporossInstruction.Type.GET_BUCKETS
+			|| instruction.getType() == TemporossInstruction.Type.FILL_BUCKETS)
 		{
 			return config.missingSupplyColor();
 		}

@@ -76,7 +76,8 @@ class TemporossObjectOverlay extends Overlay
 		{
 			renderNearestSupply(graphics, plugin.getHammerSupplies());
 		}
-		else if (instructionType == TemporossInstruction.Type.GET_BUCKETS
+		else if ((instructionType == TemporossInstruction.Type.GET_BUCKETS
+			|| instructionType == TemporossInstruction.Type.FILL_BUCKETS)
 			&& config.highlightMissingSupplies())
 		{
 			renderNearestSupply(graphics, plugin.getBucketSupplies());
@@ -85,10 +86,10 @@ class TemporossObjectOverlay extends Overlay
 		{
 			for (GameObject shrine : plugin.getCookingShrines())
 			{
-				Shape shape = shrine.getClickbox();
+				Shape shape = shrine.getConvexHull();
 				if (shape == null)
 				{
-					shape = shrine.getConvexHull();
+					shape = shrine.getClickbox();
 				}
 				if (shape == null)
 				{
@@ -109,7 +110,7 @@ class TemporossObjectOverlay extends Overlay
 		else if (instructionType == TemporossInstruction.Type.ATTACK
 			&& config.highlightSpiritPool())
 		{
-			renderNorthernSpiritPool(graphics);
+			renderTargetSpiritPool(graphics);
 		}
 		if (plugin.isWaveIncoming())
 		{
@@ -119,18 +120,18 @@ class TemporossObjectOverlay extends Overlay
 		return null;
 	}
 
-	private void renderNorthernSpiritPool(Graphics2D graphics)
+	private void renderTargetSpiritPool(Graphics2D graphics)
 	{
-		NPC northern = plugin.getNorthernSpiritPool();
-		if (northern == null)
+		NPC pool = plugin.getTargetSpiritPool();
+		if (pool == null)
 		{
 			return;
 		}
 
-		Shape shape = northern.getConvexHull();
+		Shape shape = pool.getConvexHull();
 		if (shape == null)
 		{
-			shape = northern.getCanvasTilePoly();
+			shape = pool.getCanvasTilePoly();
 		}
 		renderHull(graphics, shape, config.spiritPoolColor());
 	}

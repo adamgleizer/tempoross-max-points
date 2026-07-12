@@ -20,6 +20,10 @@ public class TemporossStrategy
 	private boolean openingLowEnergyConfirmed;
 	private boolean openingEarlySubmerge;
 	private boolean openingEarlyPoolSeen;
+	private boolean openingShipFireSeen;
+	private boolean openingShipFireCleared;
+	private boolean recoveryPoolPending;
+	private boolean finalBucketSetupComplete;
 	private int previousCookedFish;
 	private int previousTotalFish;
 	private int firstBatchLoaded;
@@ -59,11 +63,13 @@ public class TemporossStrategy
 
 		if (wasInEncounter)
 		{
+			updateOpeningShipFireGate(state);
 			updateOpeningEnergyValidation(state);
 			if (!(openingEarlySubmerge && state.isSpiritPoolActive()))
 			{
 				advance(state);
 			}
+			updateOpeningShipFireGate(state);
 			updateOpeningEnergyValidation(state);
 		}
 
@@ -109,6 +115,10 @@ public class TemporossStrategy
 		openingLowEnergyConfirmed = false;
 		openingEarlySubmerge = false;
 		openingEarlyPoolSeen = false;
+		openingShipFireSeen = false;
+		openingShipFireCleared = false;
+		recoveryPoolPending = false;
+		finalBucketSetupComplete = false;
 		previousCookedFish = 0;
 		previousTotalFish = 0;
 		firstBatchLoaded = 0;
@@ -237,7 +247,10 @@ public class TemporossStrategy
 				recoveryBatchLoaded += cookedLoaded;
 				if (recoveryBatchLoaded >= secondBatchDeficit)
 				{
-					stage = TemporossStage.COLLECT_THIRD_BATCH;
+					recoveryPoolPending = true;
+					stage = state.isSpiritPoolActive()
+						? TemporossStage.ATTACK_RECOVERY_POOL
+						: TemporossStage.COLLECT_THIRD_BATCH;
 				}
 				else if (!state.isLoadingFish()
 					&& totalFishDecrease > 0
@@ -251,7 +264,21 @@ public class TemporossStrategy
 					stage = TemporossStage.COLLECT_RECOVERY_BATCH;
 				}
 				break;
+			case ATTACK_RECOVERY_POOL:
+				updatePoolSeen(state);
+				if (spiritPoolSeen && !state.isSpiritPoolActive())
+				{
+					recoveryPoolPending = false;
+					spiritPoolSeen = false;
+					stage = TemporossStage.COLLECT_THIRD_BATCH;
+				}
+				break;
 			case COLLECT_THIRD_BATCH:
+				if (recoveryPoolPending && state.isSpiritPoolActive())
+				{
+					enterPoolStage(TemporossStage.ATTACK_RECOVERY_POOL, state);
+					break;
+				}
 				if ((state.getCookedHarpoonfish() >= FULL_BATCH_TARGET
 					|| isStormAtLeast(state, STORM_LEAVE_THRESHOLD))
 					&& state.getCookedHarpoonfish() > 0)
@@ -276,6 +303,10 @@ public class TemporossStrategy
 				}
 				break;
 			case EXTINGUISH_FIRES:
+				if (!finalBucketSetupComplete && state.getFreeInventorySlots() <= FINAL_FISH_TARGET)
+				{
+					finalBucketSetupComplete = true;
+				}
 				if (totalFish >= FINAL_FISH_TARGET
 					&& isStormAtLeast(state, FINAL_WARNING_STORM))
 				{
@@ -323,7 +354,7 @@ public class TemporossStrategy
 						"Limit pool damage and let Energy regenerate before resuming collection.",
 						TemporossInstruction.Type.ATTACK);
 				}
-				if (state.isShipFireActive())
+				if (state.isShipFireActive() && !openingShipFireCleared)
 				{
 					return instruction("Douse ship fire",
 						"Extinguish the active fire on the ship before collecting the next batch.",
@@ -385,6 +416,10 @@ public class TemporossStrategy
 					TemporossInstruction.Type.LOAD, "Recovery loaded",
 					recoveryBatchLoaded + " / " + secondBatchDeficit,
 					recoveryBatchLoaded >= secondBatchDeficit);
+			case ATTACK_RECOVERY_POOL:
+				return instruction("Fish the spirit pool",
+					"Damage Tempoross while the recovery load keeps it submerged.",
+					TemporossInstruction.Type.ATTACK);
 			case COLLECT_THIRD_BATCH:
 				if (isStormAtLeast(state, STORM_LEAVE_THRESHOLD)
 					&& state.getRawHarpoonfish() > 0)
@@ -411,6 +446,14 @@ public class TemporossStrategy
 					essence == null ? "--" : essence + "% / <" + ESSENCE_GOAL + "%",
 					essence != null && essence < ESSENCE_GOAL);
 			case EXTINGUISH_FIRES:
+				if (!finalBucketSetupComplete)
+				{
+					return progress("Fill inventory with buckets",
+						"Take buckets until only two inventory slots remain open for the final fish.",
+						TemporossInstruction.Type.FILL_BUCKETS, "Free slots",
+						state.getFreeInventorySlots() + " / " + FINAL_FISH_TARGET,
+						state.getFreeInventorySlots() <= FINAL_FISH_TARGET);
+				}
 				boolean finalFishReady = totalFish >= FINAL_FISH_TARGET;
 				return progress(finalFishReady ? "Extinguish fires" : "Extinguish fires and catch 2 fish",
 					isStormAtLeast(state, FINAL_WARNING_STORM)
@@ -427,12 +470,6 @@ public class TemporossStrategy
 					"Fish loaded", finalFishLoaded + " / " + FINAL_FISH_TARGET,
 					finalFishLoaded >= FINAL_FISH_TARGET);
 			case FINISH_TEMPOROSS:
-				if (!state.isSpiritPoolActive())
-				{
-					return instruction("Extinguish fires while cannons fire",
-						"The final fish are loaded. Extinguish as many fires as possible while waiting for the spirit pool.",
-						TemporossInstruction.Type.DOUSE_ALL_FIRES);
-				}
 				return instruction("Finish Tempoross",
 					"Fish at the spirit pool and leave enough time to secure the kill.",
 					TemporossInstruction.Type.ATTACK);
@@ -518,6 +555,22 @@ public class TemporossStrategy
 		{
 			openingEnergyValidationPending = false;
 			openingLowEnergyConfirmed = true;
+		}
+	}
+
+	private void updateOpeningShipFireGate(TemporossState state)
+	{
+		if (stage != TemporossStage.COLLECT_SECOND_BATCH || openingShipFireCleared)
+		{
+			return;
+		}
+		if (state.isShipFireActive())
+		{
+			openingShipFireSeen = true;
+		}
+		else if (openingShipFireSeen)
+		{
+			openingShipFireCleared = true;
 		}
 	}
 

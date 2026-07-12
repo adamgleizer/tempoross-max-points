@@ -17,7 +17,8 @@ public final class TemporossInstruction
 		DOUSE_ALL_FIRES,
 		GET_ROPE,
 		GET_HAMMER,
-		GET_BUCKETS
+		GET_BUCKETS,
+		FILL_BUCKETS
 	}
 
 	private final String title;
