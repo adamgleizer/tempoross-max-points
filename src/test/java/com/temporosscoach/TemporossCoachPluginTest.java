@@ -1,13 +1,13 @@
-package com.example;
+package com.temporosscoach;
 
 import net.runelite.client.RuneLite;
 import net.runelite.client.externalplugins.ExternalPluginManager;
 
-public class ExamplePluginTest
+public class TemporossCoachPluginTest
 {
 	public static void main(String[] args) throws Exception
 	{
-		ExternalPluginManager.loadBuiltin(ExamplePlugin.class);
+		ExternalPluginManager.loadBuiltin(TemporossCoachPlugin.class);
 		RuneLite.main(args);
 	}
 }
