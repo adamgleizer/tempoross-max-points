@@ -300,10 +300,11 @@ public class TemporossStrategyTest
 		state.setSpiritPoolActive(true);
 		setFish(state, 0, 0);
 		assertLoadedStage(strategy, state, TemporossStage.ATTACK_SECOND_POOL);
-		state.setEncounterState(true, 100, 45, 0);
+		state.setEncounterState(true, 100, 50, 0);
 		assertStage(strategy, state, TemporossStage.ATTACK_SECOND_POOL);
-		state.setSpiritPoolActive(false);
+		state.setEncounterState(true, 100, 49, 0);
 		TemporossInstruction bucketPreparation = strategy.getInstruction(state);
+		assertEquals(TemporossStage.EXTINGUISH_FIRES, strategy.getStage());
 		assertEquals(TemporossInstruction.Type.FILL_BUCKETS, bucketPreparation.getType());
 		assertEquals("19 / 2", bucketPreparation.getProgressText());
 		setFinalBucketInventory(state);
@@ -465,6 +466,26 @@ public class TemporossStrategyTest
 
 		state.setSpiritPoolActive(false);
 		assertStage(strategy, state, TemporossStage.COLLECT_THIRD_BATCH);
+	}
+
+	@Test
+	public void finishesCatchingRecoveryAmountBeforeCooking()
+	{
+		TemporossStrategy strategy = new TemporossStrategy();
+		TemporossState state = encounterState();
+		advanceToRecoveryPool(strategy, state, 10);
+		state.setSpiritPoolActive(false);
+		assertStage(strategy, state, TemporossStage.COLLECT_RECOVERY_BATCH);
+
+		setFish(state, 8, 0);
+		TemporossInstruction keepFishing = strategy.getInstruction(state);
+		assertEquals(TemporossInstruction.Type.FISH, keepFishing.getType());
+		assertEquals("8 / 9", keepFishing.getProgressText());
+
+		setFish(state, 9, 0);
+		TemporossInstruction cook = strategy.getInstruction(state);
+		assertEquals(TemporossInstruction.Type.COOK, cook.getType());
+		assertEquals("Cook recovery fish", cook.getTitle());
 	}
 
 	@Test

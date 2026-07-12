@@ -296,7 +296,9 @@ public class TemporossStrategy
 				break;
 			case ATTACK_SECOND_POOL:
 				updatePoolSeen(state);
-				if (spiritPoolSeen && !state.isSpiritPoolActive())
+				Integer essence = state.getEssencePercent();
+				if ((essence != null && essence < ESSENCE_GOAL)
+					|| (spiritPoolSeen && !state.isSpiritPoolActive()))
 				{
 					stage = TemporossStage.EXTINGUISH_FIRES;
 					spiritPoolSeen = false;
@@ -407,7 +409,7 @@ public class TemporossStrategy
 					TemporossInstruction.Type.ATTACK);
 			case COLLECT_RECOVERY_BATCH:
 				int remainingRecovery = remainingRecoveryFish();
-				return batchCollectionInstruction(state, remainingRecovery,
+				return recoveryCollectionInstruction(state, remainingRecovery,
 					"Recover the " + remainingRecovery
 						+ " cooked fish missing from the previous 19-fish load.");
 			case LOAD_RECOVERY_BATCH:
@@ -441,7 +443,7 @@ public class TemporossStrategy
 			case ATTACK_SECOND_POOL:
 				Integer essence = state.getEssencePercent();
 				return progress("Damage Tempoross",
-					"Bring essence below 60%, ideally below 50%, then wait for the pool to close.",
+					"Bring essence below 50%, then move on to bucket preparation.",
 					TemporossInstruction.Type.ATTACK, "Essence",
 					essence == null ? "--" : essence + "% / <" + ESSENCE_GOAL + "%",
 					essence != null && essence < ESSENCE_GOAL);
@@ -614,6 +616,28 @@ public class TemporossStrategy
 		return progressWithStatus("Catch " + target + " fish", description,
 			TemporossInstruction.Type.FISH, "Total fish", totalFish + " / " + target,
 			false, "Double spot", "Inactive", false, false);
+	}
+
+	private TemporossInstruction recoveryCollectionInstruction(
+		TemporossState state,
+		int target,
+		String description)
+	{
+		int totalFish = totalFish(state);
+		if (totalFish >= target)
+		{
+			return progress("Cook recovery fish", description, TemporossInstruction.Type.COOK,
+				"Cooked harpoonfish", state.getCookedHarpoonfish() + " / " + target,
+				state.getCookedHarpoonfish() >= target);
+		}
+
+		boolean doubleSpotActive = state.isDoubleFishingSpotActive();
+		return progressWithStatus(
+			doubleSpotActive ? "Fish the double spot" : "Catch " + target + " fish",
+			description, TemporossInstruction.Type.FISH,
+			"Total fish", totalFish + " / " + target, false,
+			"Double spot", doubleSpotActive ? "Active" : "Inactive",
+			doubleSpotActive, doubleSpotActive);
 	}
 
 	private static boolean isStormAtLeast(TemporossState state, int threshold)
