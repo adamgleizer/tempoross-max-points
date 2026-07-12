@@ -274,7 +274,9 @@ public class TemporossStrategy
 				}
 				break;
 			case COLLECT_THIRD_BATCH:
-				if (recoveryPoolPending && state.isSpiritPoolActive())
+				if (recoveryPoolPending
+					&& (state.isSpiritPoolActive()
+						|| (state.getEnergyPercent() != null && state.getEnergyPercent() <= 0)))
 				{
 					enterPoolStage(TemporossStage.ATTACK_RECOVERY_POOL, state);
 					break;

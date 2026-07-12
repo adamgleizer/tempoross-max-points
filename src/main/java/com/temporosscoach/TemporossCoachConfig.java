@@ -298,7 +298,7 @@ public interface TemporossCoachConfig extends Config
 	@ConfigItem(
 		keyName = "highlightHumidifySpell",
 		name = "Highlight Humidify",
-		description = "Highlights Humidify when fewer than one-third of carried buckets contain water",
+		description = "Highlights Humidify when at most one-third of carried buckets contain water",
 		section = sceneHighlights,
 		position = 19
 	)
@@ -502,7 +502,7 @@ public interface TemporossCoachConfig extends Config
 	@ConfigItem(
 		keyName = "showHumidifyInfoBox",
 		name = "Show Humidify infobox",
-		description = "Shows the Humidify icon when fewer than one-third of carried buckets contain water",
+		description = "Shows the Humidify icon when at most one-third of carried buckets contain water",
 		section = infoboxes,
 		position = 33
 	)

@@ -208,7 +208,7 @@ public class TemporossState
 
 	public boolean isWaterBucketRatioLow()
 	{
-		return getBuckets() > 0 && waterBuckets * 3 < getBuckets();
+		return getBuckets() > 0 && waterBuckets * 3 <= getBuckets();
 	}
 
 	public int getRope()

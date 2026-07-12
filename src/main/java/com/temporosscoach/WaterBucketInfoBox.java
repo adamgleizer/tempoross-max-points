@@ -43,7 +43,7 @@ final class WaterBucketInfoBox extends InfoBox
 		{
 			return HIGH_COLOR;
 		}
-		if (totalBuckets > 0 && waterBuckets * 3 >= totalBuckets)
+		if (totalBuckets > 0 && waterBuckets * 3 > totalBuckets)
 		{
 			return MEDIUM_COLOR;
 		}

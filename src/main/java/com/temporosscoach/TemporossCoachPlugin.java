@@ -119,6 +119,7 @@ public class TemporossCoachPlugin extends Plugin
 	private final TemporossStrategy strategy = new TemporossStrategy();
 	private final TemporossLoadTracker loadTracker = new TemporossLoadTracker();
 	private final Set<NPC> activeSpiritPools = Collections.newSetFromMap(new IdentityHashMap<>());
+	private final Set<NPC> inactiveSpiritPools = Collections.newSetFromMap(new IdentityHashMap<>());
 	private final Set<NPC> fishingSpots = Collections.newSetFromMap(new IdentityHashMap<>());
 	private final Set<NPC> doubleFishingSpots = Collections.newSetFromMap(new IdentityHashMap<>());
 	private final Set<NPC> ammunitionCrates = Collections.newSetFromMap(new IdentityHashMap<>());
@@ -192,6 +193,7 @@ public class TemporossCoachPlugin extends Plugin
 		humidifyInfoBoxVisible = false;
 		hudReader.reset();
 		activeSpiritPools.clear();
+		inactiveSpiritPools.clear();
 		fishingSpots.clear();
 		doubleFishingSpots.clear();
 		normalFishingSpotTarget = null;
@@ -239,6 +241,7 @@ public class TemporossCoachPlugin extends Plugin
 		if (!state.isInEncounter())
 		{
 			activeSpiritPools.clear();
+			inactiveSpiritPools.clear();
 			waveIncoming = false;
 			waveImpactTime = null;
 		}
@@ -454,6 +457,7 @@ public class TemporossCoachPlugin extends Plugin
 		clearGuidancePath();
 		completedPathTarget = null;
 		activeSpiritPools.clear();
+		inactiveSpiritPools.clear();
 		fishingSpots.clear();
 		doubleFishingSpots.clear();
 		normalFishingSpotTarget = null;
@@ -534,6 +538,7 @@ public class TemporossCoachPlugin extends Plugin
 	{
 		NPC npc = event.getNpc();
 		activeSpiritPools.remove(npc);
+		inactiveSpiritPools.remove(npc);
 		fishingSpots.remove(npc);
 		doubleFishingSpots.remove(npc);
 		if (npc == normalFishingSpotTarget)
@@ -839,6 +844,7 @@ public class TemporossCoachPlugin extends Plugin
 	private void updateTrackedNpc(NPC npc)
 	{
 		activeSpiritPools.remove(npc);
+		inactiveSpiritPools.remove(npc);
 		fishingSpots.remove(npc);
 		doubleFishingSpots.remove(npc);
 		ammunitionCrates.remove(npc);
@@ -846,6 +852,10 @@ public class TemporossCoachPlugin extends Plugin
 		if (npc.getId() == NpcID.TEMPOROSS_P2_FISHINGSPOT)
 		{
 			activeSpiritPools.add(npc);
+		}
+		else if (npc.getId() == NpcID.TEMPOROSS_P2_FISHINGSPOT_INACTIVE)
+		{
+			inactiveSpiritPools.add(npc);
 		}
 		else if (npc.getId() == NpcID.TEMPOROSS_HARPOONFISH_FISHINGSPOT_NORTH
 			|| npc.getId() == NpcID.TEMPOROSS_HARPOONFISH_FISHINGSPOT_SOUTH)
@@ -975,7 +985,7 @@ public class TemporossCoachPlugin extends Plugin
 		}
 		if (instruction.getType() == TemporossInstruction.Type.ATTACK)
 		{
-			return !activeSpiritPools.isEmpty() && config.pathToSpiritPool();
+			return hasSpiritPoolPathTarget() && config.pathToSpiritPool();
 		}
 		return instruction.getType() == TemporossInstruction.Type.LOAD
 			&& config.pathToAmmunitionCrate();
@@ -1023,7 +1033,7 @@ public class TemporossCoachPlugin extends Plugin
 			return PathTargetKind.AMMUNITION_CRATE;
 		}
 		if (instruction.getType() == TemporossInstruction.Type.ATTACK
-			&& !activeSpiritPools.isEmpty())
+			&& hasSpiritPoolPathTarget())
 		{
 			return PathTargetKind.SPIRIT_POOL;
 		}
@@ -1073,9 +1083,35 @@ public class TemporossCoachPlugin extends Plugin
 		}
 		if (instruction.getType() == TemporossInstruction.Type.ATTACK)
 		{
-			return getTargetSpiritPool();
+			return getPathSpiritPool();
 		}
 		return null;
+	}
+
+	private boolean hasSpiritPoolPathTarget()
+	{
+		return !activeSpiritPools.isEmpty()
+			|| (state.getEnergyPercent() != null
+				&& state.getEnergyPercent() <= 0
+				&& !inactiveSpiritPools.isEmpty());
+	}
+
+	private NPC getPathSpiritPool()
+	{
+		if (!activeSpiritPools.isEmpty())
+		{
+			return getTargetSpiritPool();
+		}
+		if (state.getEnergyPercent() == null || state.getEnergyPercent() > 0)
+		{
+			return null;
+		}
+		if (strategy.getStage() == TemporossStage.FINISH_TEMPOROSS)
+		{
+			Object nearest = nearestPathTarget(inactiveSpiritPools);
+			return nearest instanceof NPC ? (NPC) nearest : null;
+		}
+		return getNorthernSpiritPool(inactiveSpiritPools);
 	}
 
 	private boolean shouldPreferDoubleFishingSpot()
@@ -1348,9 +1384,14 @@ public class TemporossCoachPlugin extends Plugin
 
 	NPC getNorthernSpiritPool()
 	{
+		return getNorthernSpiritPool(activeSpiritPools);
+	}
+
+	private static NPC getNorthernSpiritPool(Iterable<NPC> spiritPools)
+	{
 		NPC northern = null;
 		int northernEdge = Integer.MIN_VALUE;
-		for (NPC npc : activeSpiritPools)
+		for (NPC npc : spiritPools)
 		{
 			int edge = npc.getWorldArea().getY() + npc.getWorldArea().getHeight() - 1;
 			if (edge > northernEdge)

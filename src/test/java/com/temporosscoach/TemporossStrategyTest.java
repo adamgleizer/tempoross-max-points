@@ -458,6 +458,11 @@ public class TemporossStrategyTest
 		setFish(state, 0, 0);
 		assertLoadedStage(strategy, state, TemporossStage.COLLECT_THIRD_BATCH);
 
+		state.setEncounterState(true, 0, 60, 0);
+		TemporossInstruction earlyAttack = strategy.getInstruction(state);
+		assertEquals(TemporossStage.ATTACK_RECOVERY_POOL, strategy.getStage());
+		assertEquals(TemporossInstruction.Type.ATTACK, earlyAttack.getType());
+
 		state.setSpiritPoolActive(true);
 		TemporossInstruction attack = strategy.getInstruction(state);
 		assertEquals(TemporossStage.ATTACK_RECOVERY_POOL, strategy.getStage());
