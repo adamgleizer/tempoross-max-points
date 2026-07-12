@@ -28,6 +28,7 @@ public class TemporossState
 	private boolean tethered;
 	private boolean doubleFishingSpotActive;
 	private boolean shipFireActive;
+	private boolean loadingFish;
 
 	void updateInventory(ItemContainer inventory)
 	{
@@ -146,6 +147,7 @@ public class TemporossState
 		tethered = false;
 		doubleFishingSpotActive = false;
 		shipFireActive = false;
+		loadingFish = false;
 	}
 
 	void setSpiritPoolActive(boolean spiritPoolActive)
@@ -166,6 +168,11 @@ public class TemporossState
 	void setShipFireActive(boolean shipFireActive)
 	{
 		this.shipFireActive = shipFireActive;
+	}
+
+	void setLoadingFish(boolean loadingFish)
+	{
+		this.loadingFish = loadingFish;
 	}
 
 	void clear()
@@ -197,6 +204,11 @@ public class TemporossState
 	public int getWaterBuckets()
 	{
 		return waterBuckets;
+	}
+
+	public boolean isWaterBucketRatioLow()
+	{
+		return getBuckets() > 0 && waterBuckets * 3 < getBuckets();
 	}
 
 	public int getRope()
@@ -267,5 +279,10 @@ public class TemporossState
 	public boolean isShipFireActive()
 	{
 		return shipFireActive;
+	}
+
+	public boolean isLoadingFish()
+	{
+		return loadingFish;
 	}
 }

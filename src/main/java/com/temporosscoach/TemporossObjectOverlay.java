@@ -41,20 +41,6 @@ class TemporossObjectOverlay extends Overlay
 	@Override
 	public Dimension render(Graphics2D graphics)
 	{
-		if (plugin.isWaveIncoming())
-		{
-			if (config.fireTimerMode() != TemporossTimerMode.OFF)
-			{
-				renderFires(graphics, plugin.getPathFires());
-			}
-			if (config.highlightPathFires())
-			{
-				renderFireClickboxes(graphics, plugin.getPathFires(), config.pathFireColor());
-			}
-			renderWaveTarget(graphics);
-			return null;
-		}
-
 		if (config.fireTimerMode() != TemporossTimerMode.OFF)
 		{
 			renderFires(graphics);
@@ -67,6 +53,11 @@ class TemporossObjectOverlay extends Overlay
 		if (config.highlightPathFires())
 		{
 			renderFireClickboxes(graphics, plugin.getPathFires(), config.pathFireColor());
+		}
+		if (plugin.getInstruction().getType() == TemporossInstruction.Type.DOUSE_ALL_FIRES
+			&& config.highlightFirefightingTargets())
+		{
+			renderActiveFireClickboxes(graphics);
 		}
 		if (config.highlightDamagedTetherPoints())
 		{
@@ -120,13 +111,17 @@ class TemporossObjectOverlay extends Overlay
 		{
 			renderNorthernSpiritPool(graphics);
 		}
+		if (plugin.isWaveIncoming())
+		{
+			renderWaveTarget(graphics);
+		}
 
 		return null;
 	}
 
 	private void renderNorthernSpiritPool(Graphics2D graphics)
 	{
-		NPC northern = northernmostNpc(plugin.getActiveSpiritPools());
+		NPC northern = plugin.getNorthernSpiritPool();
 		if (northern == null)
 		{
 			return;
@@ -138,22 +133,6 @@ class TemporossObjectOverlay extends Overlay
 			shape = northern.getCanvasTilePoly();
 		}
 		renderHull(graphics, shape, config.spiritPoolColor());
-	}
-
-	private static NPC northernmostNpc(Iterable<NPC> npcs)
-	{
-		NPC northern = null;
-		int northernEdge = Integer.MIN_VALUE;
-		for (NPC npc : npcs)
-		{
-			int edge = npc.getWorldArea().getY() + npc.getWorldArea().getHeight() - 1;
-			if (edge > northernEdge)
-			{
-				northern = npc;
-				northernEdge = edge;
-			}
-		}
-		return northern;
 	}
 
 	private void renderNearestSupply(Graphics2D graphics, Iterable<GameObject> supplies)
@@ -212,17 +191,30 @@ class TemporossObjectOverlay extends Overlay
 	{
 		for (GameObject fire : fires)
 		{
-			Shape shape = fire.getClickbox();
-			if (shape == null)
-			{
-				shape = fire.getConvexHull();
-			}
-			if (shape == null)
-			{
-				shape = fire.getCanvasTilePoly();
-			}
-			renderHull(graphics, shape, color);
+			renderFireClickbox(graphics, fire, color);
 		}
+	}
+
+	private void renderActiveFireClickboxes(Graphics2D graphics)
+	{
+		for (GameObject fire : plugin.getFirefightingTargets())
+		{
+			renderFireClickbox(graphics, fire, config.firefightingTargetColor());
+		}
+	}
+
+	private static void renderFireClickbox(Graphics2D graphics, GameObject fire, Color color)
+	{
+		Shape shape = fire.getClickbox();
+		if (shape == null)
+		{
+			shape = fire.getConvexHull();
+		}
+		if (shape == null)
+		{
+			shape = fire.getCanvasTilePoly();
+		}
+		renderHull(graphics, shape, color);
 	}
 
 	private void renderDamagedTetherPoints(Graphics2D graphics)

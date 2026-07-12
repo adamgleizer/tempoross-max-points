@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.Actor;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
 import net.runelite.api.CollisionData;
@@ -62,11 +63,13 @@ public class TemporossCoachPlugin extends Plugin
 	private static final String WAVE_INCOMING_MESSAGE = "a colossal wave closes in...";
 	private static final String WAVE_END_SAFE_MESSAGE = "as the wave washes over you";
 	private static final String WAVE_END_DANGEROUS_MESSAGE = "the wave slams into you";
+	private static final String LOAD_STARTED_MESSAGE = "you start loading harpoonfish into the cannon";
 	static final int WAVE_IMPACT_MILLIS = 7_800;
 	private static final int FIRE_SPREAD_MILLIS = 24_000;
 	private static final int FIRE_SPAWN_MILLIS = 9_600;
 	private static final int FIRE_SPREADING_SPAWN_MILLIS = 1_200;
 	private static final int SHIP_FIRE_MAX_DISTANCE = 8;
+	private static final int MAX_FIREFIGHTING_TARGETS = 8;
 	private static final WorldPoint NORTH_AMMUNITION_CRATE_INTERACTION_TILE =
 		new WorldPoint(3037, 2850, 0);
 
@@ -114,6 +117,7 @@ public class TemporossCoachPlugin extends Plugin
 
 	private final TemporossState state = new TemporossState();
 	private final TemporossStrategy strategy = new TemporossStrategy();
+	private final TemporossLoadTracker loadTracker = new TemporossLoadTracker();
 	private final Set<NPC> activeSpiritPools = Collections.newSetFromMap(new IdentityHashMap<>());
 	private final Set<NPC> fishingSpots = Collections.newSetFromMap(new IdentityHashMap<>());
 	private final Set<NPC> doubleFishingSpots = Collections.newSetFromMap(new IdentityHashMap<>());
@@ -122,6 +126,7 @@ public class TemporossCoachPlugin extends Plugin
 	private final Map<GameObject, TemporossTimedObject> fireObjects = new IdentityHashMap<>();
 	private final Set<GameObject> shipFires = Collections.newSetFromMap(new IdentityHashMap<>());
 	private final Set<GameObject> pathFires = Collections.newSetFromMap(new IdentityHashMap<>());
+	private List<GameObject> firefightingTargets = Collections.emptyList();
 	private final Set<GameObject> tetherPoints = Collections.newSetFromMap(new IdentityHashMap<>());
 	private final Set<GameObject> ropeSupplies = Collections.newSetFromMap(new IdentityHashMap<>());
 	private final Set<GameObject> hammerSupplies = Collections.newSetFromMap(new IdentityHashMap<>());
@@ -194,11 +199,13 @@ public class TemporossCoachPlugin extends Plugin
 		fireObjects.clear();
 		shipFires.clear();
 		pathFires.clear();
+		firefightingTargets = Collections.emptyList();
 		tetherPoints.clear();
 		ropeSupplies.clear();
 		hammerSupplies.clear();
 		bucketSupplies.clear();
 		waveIncoming = false;
+		loadTracker.reset();
 		wasInEncounter = false;
 		waveImpactTime = null;
 		state.clear();
@@ -237,12 +244,29 @@ public class TemporossCoachPlugin extends Plugin
 		state.setDoubleFishingSpotActive(!doubleFishingSpots.isEmpty());
 		updateShipFires();
 		state.setTethered(client.getVarbitValue(VarbitID.TEMPOROSS_TETHERED) > 0);
+		updateLoadingState();
 		pruneStaleTetherPoints();
 		instruction = strategy.getInstruction(state);
 		updateWaveTetherTarget();
 		updateGuidancePath();
 		updatePathFires();
+		updateFirefightingTargets();
 		wasInEncounter = state.isInEncounter();
+	}
+
+	private void updateLoadingState()
+	{
+		if (!state.isInEncounter() || client.getLocalPlayer() == null)
+		{
+			loadTracker.reset();
+			state.setLoadingFish(false);
+			return;
+		}
+
+		Actor interacting = client.getLocalPlayer().getInteracting();
+		boolean interactingWithCrate = interacting instanceof NPC
+			&& isAmmunitionCrate(((NPC) interacting).getId());
+		state.setLoadingFish(loadTracker.update(client.getTickCount(), interactingWithCrate));
 	}
 
 	private void updateRunePouchContents()
@@ -360,7 +384,7 @@ public class TemporossCoachPlugin extends Plugin
 		}
 
 		boolean shouldShow = config.showHumidifyInfoBox()
-			&& state.getWaterBuckets() <= 2;
+			&& state.isWaterBucketRatioLow();
 		if (shouldShow && !humidifyInfoBoxVisible)
 		{
 			infoBoxManager.addInfoBox(humidifyInfoBox);
@@ -421,10 +445,13 @@ public class TemporossCoachPlugin extends Plugin
 		fireObjects.clear();
 		shipFires.clear();
 		pathFires.clear();
+		firefightingTargets = Collections.emptyList();
 		tetherPoints.clear();
 		ropeSupplies.clear();
 		hammerSupplies.clear();
 		bucketSupplies.clear();
+		loadTracker.reset();
+		state.setLoadingFish(false);
 	}
 
 	@Subscribe
@@ -436,6 +463,10 @@ public class TemporossCoachPlugin extends Plugin
 		}
 
 		String message = event.getMessage().toLowerCase();
+		if (message.contains(LOAD_STARTED_MESSAGE))
+		{
+			loadTracker.observeActivity(client.getTickCount());
+		}
 		if (message.contains(WAVE_INCOMING_MESSAGE))
 		{
 			if (!waveIncoming)
@@ -521,6 +552,7 @@ public class TemporossCoachPlugin extends Plugin
 		fireObjects.remove(gameObject);
 		shipFires.remove(gameObject);
 		pathFires.remove(gameObject);
+		firefightingTargets.remove(gameObject);
 		tetherPoints.remove(gameObject);
 		ropeSupplies.remove(gameObject);
 		hammerSupplies.remove(gameObject);
@@ -607,6 +639,7 @@ public class TemporossCoachPlugin extends Plugin
 		fireObjects.remove(gameObject);
 		shipFires.remove(gameObject);
 		pathFires.remove(gameObject);
+		firefightingTargets.remove(gameObject);
 		tetherPoints.remove(gameObject);
 		ropeSupplies.remove(gameObject);
 		hammerSupplies.remove(gameObject);
@@ -694,6 +727,34 @@ public class TemporossCoachPlugin extends Plugin
 		}
 	}
 
+	private void updateFirefightingTargets()
+	{
+		if (instruction.getType() != TemporossInstruction.Type.DOUSE_ALL_FIRES
+			|| client.getLocalPlayer() == null)
+		{
+			firefightingTargets = Collections.emptyList();
+			return;
+		}
+
+		WorldPoint playerLocation = client.getLocalPlayer().getWorldLocation();
+		List<GameObject> targets = new ArrayList<>();
+		for (GameObject fire : fireObjects.keySet())
+		{
+			if (fire.getId() == ObjectID.TEMPOROSS_FIRE_VISUALS)
+			{
+				targets.add(fire);
+			}
+		}
+		targets.sort((first, second) -> Integer.compare(
+			first.getWorldLocation().distanceTo(playerLocation),
+			second.getWorldLocation().distanceTo(playerLocation)));
+		if (targets.size() > MAX_FIREFIGHTING_TARGETS)
+		{
+			targets = new ArrayList<>(targets.subList(0, MAX_FIREFIGHTING_TARGETS));
+		}
+		firefightingTargets = targets;
+	}
+
 	static boolean areaIntersectsPath(WorldArea area, Iterable<WorldPoint> pathTiles)
 	{
 		if (area == null)
@@ -750,6 +811,14 @@ public class TemporossCoachPlugin extends Plugin
 		}
 	}
 
+	private static boolean isAmmunitionCrate(int npcId)
+	{
+		return npcId == NpcID.TEMPOROSS_NPC_CRATE_AMMUNITION_1
+			|| npcId == NpcID.TEMPOROSS_NPC_CRATE_AMMUNITION_2
+			|| npcId == NpcID.TEMPOROSS_NPC_CRATE_AMMUNITION_3
+			|| npcId == NpcID.TEMPOROSS_NPC_CRATE_AMMUNITION_4;
+	}
+
 	private void updateTrackedNpc(NPC npc)
 	{
 		activeSpiritPools.remove(npc);
@@ -773,10 +842,7 @@ public class TemporossCoachPlugin extends Plugin
 			normalFishingSpotTarget = null;
 			clearGuidancePath();
 		}
-		else if (npc.getId() == NpcID.TEMPOROSS_NPC_CRATE_AMMUNITION_1
-			|| npc.getId() == NpcID.TEMPOROSS_NPC_CRATE_AMMUNITION_2
-			|| npc.getId() == NpcID.TEMPOROSS_NPC_CRATE_AMMUNITION_3
-			|| npc.getId() == NpcID.TEMPOROSS_NPC_CRATE_AMMUNITION_4)
+		else if (isAmmunitionCrate(npc.getId()))
 		{
 			ammunitionCrates.add(npc);
 		}
@@ -878,6 +944,10 @@ public class TemporossCoachPlugin extends Plugin
 		{
 			return config.pathToDoubleFishingSpot();
 		}
+		if (isMissingSupplyInstruction())
+		{
+			return config.pathToMissingSupplies();
+		}
 		if (instruction.getType() == TemporossInstruction.Type.FISH)
 		{
 			return config.pathToFishingSpot();
@@ -885,6 +955,10 @@ public class TemporossCoachPlugin extends Plugin
 		if (instruction.getType() == TemporossInstruction.Type.COOK)
 		{
 			return config.pathToCookingShrine();
+		}
+		if (instruction.getType() == TemporossInstruction.Type.ATTACK)
+		{
+			return !activeSpiritPools.isEmpty() && config.pathToSpiritPool();
 		}
 		return instruction.getType() == TemporossInstruction.Type.LOAD
 			&& config.pathToAmmunitionCrate();
@@ -915,6 +989,10 @@ public class TemporossCoachPlugin extends Plugin
 		{
 			return PathTargetKind.DOUBLE_SPOT;
 		}
+		if (isMissingSupplyInstruction())
+		{
+			return PathTargetKind.MISSING_SUPPLY;
+		}
 		if (instruction.getType() == TemporossInstruction.Type.FISH)
 		{
 			return PathTargetKind.FISHING_SPOT;
@@ -926,6 +1004,11 @@ public class TemporossCoachPlugin extends Plugin
 		if (instruction.getType() == TemporossInstruction.Type.LOAD)
 		{
 			return PathTargetKind.AMMUNITION_CRATE;
+		}
+		if (instruction.getType() == TemporossInstruction.Type.ATTACK
+			&& !activeSpiritPools.isEmpty())
+		{
+			return PathTargetKind.SPIRIT_POOL;
 		}
 		return null;
 	}
@@ -939,6 +1022,18 @@ public class TemporossCoachPlugin extends Plugin
 		if (shouldPreferDoubleFishingSpot())
 		{
 			return nearestPathTarget(doubleFishingSpots);
+		}
+		if (instruction.getType() == TemporossInstruction.Type.GET_ROPE)
+		{
+			return nearestPathTarget(ropeSupplies);
+		}
+		if (instruction.getType() == TemporossInstruction.Type.GET_HAMMER)
+		{
+			return nearestPathTarget(hammerSupplies);
+		}
+		if (instruction.getType() == TemporossInstruction.Type.GET_BUCKETS)
+		{
+			return nearestPathTarget(bucketSupplies);
 		}
 		if (instruction.getType() == TemporossInstruction.Type.FISH)
 		{
@@ -954,6 +1049,10 @@ public class TemporossCoachPlugin extends Plugin
 		{
 			return NORTH_AMMUNITION_CRATE_INTERACTION_TILE;
 		}
+		if (instruction.getType() == TemporossInstruction.Type.ATTACK)
+		{
+			return getNorthernSpiritPool();
+		}
 		return null;
 	}
 
@@ -961,6 +1060,13 @@ public class TemporossCoachPlugin extends Plugin
 	{
 		return instruction.getType() == TemporossInstruction.Type.FISH
 			&& !doubleFishingSpots.isEmpty();
+	}
+
+	private boolean isMissingSupplyInstruction()
+	{
+		return instruction.getType() == TemporossInstruction.Type.GET_ROPE
+			|| instruction.getType() == TemporossInstruction.Type.GET_HAMMER
+			|| instruction.getType() == TemporossInstruction.Type.GET_BUCKETS;
 	}
 
 	private Object nearestPathTarget(Iterable<?> targets)
@@ -1184,10 +1290,12 @@ public class TemporossCoachPlugin extends Plugin
 	private enum PathTargetKind
 	{
 		TETHER_POINT,
+		MISSING_SUPPLY,
 		FISHING_SPOT,
 		DOUBLE_SPOT,
 		COOKING_SHRINE,
-		AMMUNITION_CRATE
+		AMMUNITION_CRATE,
+		SPIRIT_POOL
 	}
 
 	Set<GameObject> getCookingShrines()
@@ -1215,6 +1323,22 @@ public class TemporossCoachPlugin extends Plugin
 		return activeSpiritPools;
 	}
 
+	NPC getNorthernSpiritPool()
+	{
+		NPC northern = null;
+		int northernEdge = Integer.MIN_VALUE;
+		for (NPC npc : activeSpiritPools)
+		{
+			int edge = npc.getWorldArea().getY() + npc.getWorldArea().getHeight() - 1;
+			if (edge > northernEdge)
+			{
+				northern = npc;
+				northernEdge = edge;
+			}
+		}
+		return northern;
+	}
+
 	Map<GameObject, TemporossTimedObject> getFireObjects()
 	{
 		return fireObjects;
@@ -1228,6 +1352,11 @@ public class TemporossCoachPlugin extends Plugin
 	Set<GameObject> getPathFires()
 	{
 		return pathFires;
+	}
+
+	List<GameObject> getFirefightingTargets()
+	{
+		return firefightingTargets;
 	}
 
 	Set<GameObject> getTetherPoints()

@@ -28,22 +28,22 @@ final class WaterBucketInfoBox extends InfoBox
 	@Override
 	public Color getTextColor()
 	{
-		return colorForCount(state.getWaterBuckets());
+		return colorForRatio(state.getWaterBuckets(), state.getBuckets());
 	}
 
 	@Override
 	public String getTooltip()
 	{
-		return "Buckets of water: " + state.getWaterBuckets();
+		return "Buckets of water: " + state.getWaterBuckets() + " / " + state.getBuckets();
 	}
 
-	static Color colorForCount(int count)
+	static Color colorForRatio(int waterBuckets, int totalBuckets)
 	{
-		if (count >= 5)
+		if (totalBuckets > 0 && waterBuckets * 3 >= totalBuckets * 2)
 		{
 			return HIGH_COLOR;
 		}
-		if (count >= 3)
+		if (totalBuckets > 0 && waterBuckets * 3 >= totalBuckets)
 		{
 			return MEDIUM_COLOR;
 		}

@@ -70,6 +70,12 @@ final class TemporossPathOverlay extends Overlay
 			return config.waveTimerColor();
 		}
 		TemporossInstruction instruction = plugin.getInstruction();
+		if (instruction.getType() == TemporossInstruction.Type.GET_ROPE
+			|| instruction.getType() == TemporossInstruction.Type.GET_HAMMER
+			|| instruction.getType() == TemporossInstruction.Type.GET_BUCKETS)
+		{
+			return config.missingSupplyColor();
+		}
 		Object target = plugin.getGuidancePathTarget();
 		if (target instanceof NPC
 			&& plugin.getDoubleFishingSpots().contains(target))
@@ -83,6 +89,10 @@ final class TemporossPathOverlay extends Overlay
 		if (instruction.getType() == TemporossInstruction.Type.COOK)
 		{
 			return config.cookingShrineColor();
+		}
+		if (instruction.getType() == TemporossInstruction.Type.ATTACK)
+		{
+			return config.spiritPoolColor();
 		}
 		return config.ammunitionCrateColor();
 	}

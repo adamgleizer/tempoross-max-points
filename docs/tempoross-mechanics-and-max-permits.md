@@ -8,6 +8,14 @@ Sources (reviewed 12 July 2026):
 - [Tempoross](https://oldschool.runescape.wiki/w/Tempoross)
 - [Tempoross strategies — Solo cooking + firefighting (max permits)](https://oldschool.runescape.wiki/w/Tempoross/Strategies#Solo_cooking_+_firefighting_(max_permits))
 
+## Tempoross Coach route adjustments
+
+The plugin intentionally starts its opening cooking cycle at **8 raw fish**
+instead of the reference route's adjustable 9-fish baseline. It also uses
+**91% storm intensity** as its loading cutoff, leaving extra travel time when
+fires obstruct the route. The 9-fish and 93% values below describe the source
+strategy rather than the plugin's guidance.
+
 ## Encounter objective
 
 Tempoross is a non-combat Fishing boss requiring level 35 Fishing. A successful

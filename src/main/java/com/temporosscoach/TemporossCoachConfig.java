@@ -96,6 +96,31 @@ public interface TemporossCoachConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "highlightFirefightingTargets",
+		name = "Highlight firefighting targets",
+		description = "Adds clickbox highlights to the eight nearest active fires during final firefighting",
+		section = sceneHighlights,
+		position = 8
+	)
+	default boolean highlightFirefightingTargets()
+	{
+		return true;
+	}
+
+	@Alpha
+	@ConfigItem(
+		keyName = "firefightingTargetColor",
+		name = "Firefighting target color",
+		description = "Color of active fire clickbox highlights during final firefighting",
+		section = sceneHighlights,
+		position = 9
+	)
+	default Color firefightingTargetColor()
+	{
+		return Color.CYAN;
+	}
+
+	@ConfigItem(
 		keyName = "highlightFishingSpots",
 		name = "Highlight fishing spot",
 		description = "Highlights the nearest normal harpoonfish spot while fishing",
@@ -142,7 +167,7 @@ public interface TemporossCoachConfig extends Config
 	)
 	default Color doubleFishingSpotColor()
 	{
-		return new Color(0, 100, 0);
+		return Color.CYAN;
 	}
 
 	@ConfigItem(
@@ -267,13 +292,13 @@ public interface TemporossCoachConfig extends Config
 	)
 	default Color spiritPoolColor()
 	{
-		return Color.RED;
+		return Color.CYAN;
 	}
 
 	@ConfigItem(
 		keyName = "highlightHumidifySpell",
 		name = "Highlight Humidify",
-		description = "Highlights Humidify in the spellbook when two or fewer water buckets remain",
+		description = "Highlights Humidify when fewer than one-third of carried buckets contain water",
 		section = sceneHighlights,
 		position = 19
 	)
@@ -362,6 +387,30 @@ public interface TemporossCoachConfig extends Config
 		return true;
 	}
 
+	@ConfigItem(
+		keyName = "pathToSpiritPool",
+		name = "Path to spirit pool",
+		description = "Draws a route to the north spirit pool when attacking Tempoross",
+		section = targetPaths,
+		position = 27
+	)
+	default boolean pathToSpiritPool()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "pathToMissingSupplies",
+		name = "Path to missing supplies",
+		description = "Draws a route to the required rope, hammer, or bucket supply",
+		section = targetPaths,
+		position = 28
+	)
+	default boolean pathToMissingSupplies()
+	{
+		return true;
+	}
+
 	@ConfigSection(
 		name = "Colossal wave",
 		description = "Configure colossal wave guidance",
@@ -441,7 +490,7 @@ public interface TemporossCoachConfig extends Config
 	@ConfigItem(
 		keyName = "showHumidifyInfoBox",
 		name = "Show Humidify infobox",
-		description = "Shows the Humidify icon when two or fewer buckets of water remain",
+		description = "Shows the Humidify icon when fewer than one-third of carried buckets contain water",
 		section = infoboxes,
 		position = 33
 	)

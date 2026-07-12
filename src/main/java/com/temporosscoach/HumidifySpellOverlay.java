@@ -40,7 +40,7 @@ final class HumidifySpellOverlay extends Overlay
 	public Dimension render(Graphics2D graphics)
 	{
 		if (!config.highlightHumidifySpell()
-			|| state.getWaterBuckets() > 2)
+			|| !state.isWaterBucketRatioLow())
 		{
 			return null;
 		}
