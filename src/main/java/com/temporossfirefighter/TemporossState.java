@@ -1,4 +1,4 @@
-package com.temporosscoach;
+package com.temporossfirefighter;
 
 import net.runelite.api.Item;
 import net.runelite.api.ItemContainer;

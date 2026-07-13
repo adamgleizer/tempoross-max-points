@@ -1,4 +1,4 @@
-package com.temporosscoach;
+package com.temporossfirefighter;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -18,14 +18,14 @@ import net.runelite.client.ui.overlay.OverlayPosition;
 final class TemporossPathOverlay extends Overlay
 {
 	private final Client client;
-	private final TemporossCoachPlugin plugin;
-	private final TemporossCoachConfig config;
+	private final TemporossFirefighterPlugin plugin;
+	private final TemporossFirefighterConfig config;
 
 	@Inject
 	private TemporossPathOverlay(
 		Client client,
-		TemporossCoachPlugin plugin,
-		TemporossCoachConfig config)
+		TemporossFirefighterPlugin plugin,
+		TemporossFirefighterConfig config)
 	{
 		this.client = client;
 		this.plugin = plugin;

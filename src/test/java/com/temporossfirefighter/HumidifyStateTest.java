@@ -1,4 +1,4 @@
-package com.temporosscoach;
+package com.temporossfirefighter;
 
 import net.runelite.api.gameval.SpriteID;
 import org.junit.Test;
@@ -11,17 +11,17 @@ public class HumidifyStateTest
 	@Test
 	public void brightHumidifySpriteIsCastableEvenWhenTabIsClosed()
 	{
-		assertTrue(TemporossCoachPlugin.isHumidifyCastableState(
+		assertTrue(TemporossFirefighterPlugin.isHumidifyCastableState(
 			SpriteID._2XLunarSpellsOn._20, false));
 	}
 
 	@Test
 	public void darkFilteredOrMissingHumidifySpellIsNotCastable()
 	{
-		assertFalse(TemporossCoachPlugin.isHumidifyCastableState(
+		assertFalse(TemporossFirefighterPlugin.isHumidifyCastableState(
 			SpriteID.LunarMagicOff.HUMIDIFY, false));
-		assertFalse(TemporossCoachPlugin.isHumidifyCastableState(
+		assertFalse(TemporossFirefighterPlugin.isHumidifyCastableState(
 			SpriteID._2XLunarSpellsOn._20, true));
-		assertFalse(TemporossCoachPlugin.isHumidifyCastableState(null, false));
+		assertFalse(TemporossFirefighterPlugin.isHumidifyCastableState(null, false));
 	}
 }

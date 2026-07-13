@@ -11,7 +11,7 @@ This is a cross-plugin message integration. Do not add the Shortest Path reposit
 
 ## Existing code relevant to the change
 
-- `TemporossCoachPlugin` already tracks special fishing spot NPCs in the identity-backed `doubleFishingSpots` set.
+- `TemporossFirefighterPlugin` already tracks special fishing spot NPCs in the identity-backed `doubleFishingSpots` set.
 - `updateTrackedNpc(NPC)` handles initial scene discovery, `NpcSpawned`, and `NpcChanged`.
 - `onNpcDespawned(NpcDespawned)` removes despawned spots.
 - `clearSceneTracking()` runs at encounter boundaries.
@@ -42,7 +42,7 @@ If Shortest Path is absent or disabled, the messages have no consumer and should
 
 ## Configuration
 
-Add a config item to `TemporossCoachConfig` in the scene-highlights section. Suggested stable key and method:
+Add a config item to `TemporossFirefighterConfig` in the scene-highlights section. Suggested stable key and method:
 
 ```java
 @ConfigItem(
@@ -60,9 +60,9 @@ default boolean pathToDoubleFishingSpot()
 
 Adjust later positions if necessary to keep them unique and ordered. This should be opt-in because it takes control of Shortest Path's single current route. It does not contact a third-party server, so the third-party-server warning in `AGENTS.md` is not applicable.
 
-Subscribe to `ConfigChanged` in `TemporossCoachPlugin`. Check both the group and key. When this option becomes disabled, immediately clear a route owned by this plugin. When enabled during an encounter with an already tracked double spot, start a route to the selected spot rather than waiting for another spawn.
+Subscribe to `ConfigChanged` in `TemporossFirefighterPlugin`. Check both the group and key. When this option becomes disabled, immediately clear a route owned by this plugin. When enabled during an encounter with an already tracked double spot, start a route to the selected spot rather than waiting for another spawn.
 
-## State owned by `TemporossCoachPlugin`
+## State owned by `TemporossFirefighterPlugin`
 
 Add state equivalent to:
 
@@ -157,7 +157,7 @@ Shortest Path exposes a global `"clear"` operation, not a route handle owned by 
 
 ## Suggested method boundaries
 
-Keep the integration localized in `TemporossCoachPlugin` with methods along these lines:
+Keep the integration localized in `TemporossFirefighterPlugin` with methods along these lines:
 
 ```text
 updateDoubleSpotPathSelection()
@@ -187,7 +187,7 @@ Required in-game checks by the user:
 4. If another special spot remains, verify the route transfers to the nearest remaining non-suppressed spot.
 5. Disable the config while a route is active and verify immediate cleanup.
 6. Leave the encounter while a route is active and verify cleanup.
-7. Disable or uninstall Shortest Path and verify Tempoross Coach continues without errors.
+7. Disable or uninstall Shortest Path and verify Tempoross Firefighter continues without errors.
 8. Confirm normal double-spot highlighting and `TemporossStrategy` behavior remain unchanged.
 
 Per `AGENTS.md`, a successful JVM start/build is not proof of correct behavior. Offer to launch the development client with `./gradlew run`, direct the user to the RuneLite wiki's **Using Jagex Accounts** instructions, and wait for their in-game confirmation.

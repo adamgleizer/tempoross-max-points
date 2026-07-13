@@ -1,13 +1,13 @@
-package com.temporosscoach;
+package com.temporossfirefighter;
 
 import net.runelite.client.RuneLite;
 import net.runelite.client.externalplugins.ExternalPluginManager;
 
-public class TemporossCoachPluginTest
+public class TemporossFirefighterPluginTest
 {
 	public static void main(String[] args) throws Exception
 	{
-		ExternalPluginManager.loadBuiltin(TemporossCoachPlugin.class);
+		ExternalPluginManager.loadBuiltin(TemporossFirefighterPlugin.class);
 		RuneLite.main(args);
 	}
 }

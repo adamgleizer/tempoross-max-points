@@ -1,4 +1,4 @@
-package com.temporosscoach;
+package com.temporossfirefighter;
 
 import org.junit.Test;
 

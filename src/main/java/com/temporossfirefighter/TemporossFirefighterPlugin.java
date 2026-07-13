@@ -1,4 +1,4 @@
-package com.temporosscoach;
+package com.temporossfirefighter;
 
 import com.google.inject.Provides;
 import java.time.Instant;
@@ -54,12 +54,13 @@ import net.runelite.client.ui.overlay.infobox.InfoBoxManager;
 
 @Slf4j
 @PluginDescriptor(
-	name = "Tempoross Coach",
+	name = "Tempoross Firefighter",
 	description = "Guidance and inventory tracking for Tempoross",
-	tags = {"tempoross", "fishing", "coach", "helper"}
+	tags = {"tempoross", "fishing", "firefighter", "helper"}
 )
-public class TemporossCoachPlugin extends Plugin
+public class TemporossFirefighterPlugin extends Plugin
 {
+	private static final String LEGACY_CONFIG_GROUP = "tempoross-coach";
 	private static final String WAVE_INCOMING_MESSAGE = "a colossal wave closes in...";
 	private static final String WAVE_END_SAFE_MESSAGE = "as the wave washes over you";
 	private static final String WAVE_END_DANGEROUS_MESSAGE = "the wave slams into you";
@@ -80,7 +81,7 @@ public class TemporossCoachPlugin extends Plugin
 	private Notifier notifier;
 
 	@Inject
-	private TemporossCoachConfig config;
+	private TemporossFirefighterConfig config;
 
 	@Inject
 	private ConfigManager configManager;
@@ -150,14 +151,15 @@ public class TemporossCoachPlugin extends Plugin
 	private String targetNotificationKey;
 
 	@Provides
-	TemporossCoachConfig provideConfig(ConfigManager configManager)
+	TemporossFirefighterConfig provideConfig(ConfigManager configManager)
 	{
-		return configManager.getConfig(TemporossCoachConfig.class);
+		return configManager.getConfig(TemporossFirefighterConfig.class);
 	}
 
 	@Override
 	protected void startUp()
 	{
+		migrateConfigGroup();
 		migrateTimerMode("highlightFires", "fireTimerMode");
 		migrateTimerMode("useWaveTimer", "waveTimerMode");
 		overlayManager.add(preparationOverlay);
@@ -172,7 +174,7 @@ public class TemporossCoachPlugin extends Plugin
 		humidifyInfoBox = new HumidifyInfoBox(null, this);
 		spriteManager.getSpriteAsync(SpriteID.LunarMagicOn.HUMIDIFY, 0, humidifyInfoBox);
 		updateInfoBoxes();
-		log.debug("Tempoross Coach started");
+		log.debug("Tempoross Firefighter started");
 	}
 
 	@Override
@@ -215,7 +217,7 @@ public class TemporossCoachPlugin extends Plugin
 		strategy.reset();
 		instruction = TemporossStrategy.placeholderInstruction();
 		targetNotificationKey = null;
-		log.debug("Tempoross Coach stopped");
+		log.debug("Tempoross Firefighter stopped");
 	}
 
 	@Subscribe
@@ -857,20 +859,40 @@ public class TemporossCoachPlugin extends Plugin
 
 	private void migrateTimerMode(String oldKey, String newKey)
 	{
-		String legacyValue = configManager.getConfiguration(TemporossCoachConfig.GROUP, oldKey);
+		String legacyValue = configManager.getConfiguration(TemporossFirefighterConfig.GROUP, oldKey);
 		if (legacyValue == null)
 		{
 			return;
 		}
 
-		if (configManager.getConfiguration(TemporossCoachConfig.GROUP, newKey) == null)
+		if (configManager.getConfiguration(TemporossFirefighterConfig.GROUP, newKey) == null)
 		{
 			TemporossTimerMode mode = Boolean.parseBoolean(legacyValue)
 				? TemporossTimerMode.PIE
 				: TemporossTimerMode.OFF;
-			configManager.setConfiguration(TemporossCoachConfig.GROUP, newKey, mode);
+			configManager.setConfiguration(TemporossFirefighterConfig.GROUP, newKey, mode);
 		}
-		configManager.unsetConfiguration(TemporossCoachConfig.GROUP, oldKey);
+		configManager.unsetConfiguration(TemporossFirefighterConfig.GROUP, oldKey);
+	}
+
+	private void migrateConfigGroup()
+	{
+		String legacyPrefix = LEGACY_CONFIG_GROUP + ".";
+		for (String fullKey : configManager.getConfigurationKeys(legacyPrefix))
+		{
+			String key = fullKey.substring(legacyPrefix.length());
+			String legacyValue = configManager.getConfiguration(LEGACY_CONFIG_GROUP, key);
+			if (legacyValue == null)
+			{
+				continue;
+			}
+
+			if (configManager.getConfiguration(TemporossFirefighterConfig.GROUP, key) == null)
+			{
+				configManager.setConfiguration(TemporossFirefighterConfig.GROUP, key, legacyValue);
+			}
+			configManager.unsetConfiguration(LEGACY_CONFIG_GROUP, key);
+		}
 	}
 
 	private static boolean isTetherPoint(int objectId)

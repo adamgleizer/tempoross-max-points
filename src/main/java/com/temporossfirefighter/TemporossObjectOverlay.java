@@ -1,4 +1,4 @@
-package com.temporosscoach;
+package com.temporossfirefighter;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -23,13 +23,13 @@ import net.runelite.client.ui.overlay.components.TextComponent;
 class TemporossObjectOverlay extends Overlay
 {
 	private static final int PIE_DIAMETER = 20;
-	private final TemporossCoachPlugin plugin;
-	private final TemporossCoachConfig config;
+	private final TemporossFirefighterPlugin plugin;
+	private final TemporossFirefighterConfig config;
 	private final Client client;
 	private final TextComponent timerTextComponent = new TextComponent();
 
 	@Inject
-	private TemporossObjectOverlay(TemporossCoachPlugin plugin, TemporossCoachConfig config, Client client)
+	private TemporossObjectOverlay(TemporossFirefighterPlugin plugin, TemporossFirefighterConfig config, Client client)
 	{
 		this.plugin = plugin;
 		this.config = config;
@@ -261,9 +261,9 @@ class TemporossObjectOverlay extends Overlay
 			{
 				Instant now = Instant.now();
 				long remainingMillis = Math.max(0, impactTime.toEpochMilli() - now.toEpochMilli());
-				Instant startTime = impactTime.minusMillis(TemporossCoachPlugin.WAVE_IMPACT_MILLIS);
+				Instant startTime = impactTime.minusMillis(TemporossFirefighterPlugin.WAVE_IMPACT_MILLIS);
 				renderTimer(graphics, tetherPoint, timerMode, color, remainingMillis,
-					startTime, TemporossCoachPlugin.WAVE_IMPACT_MILLIS, now);
+					startTime, TemporossFirefighterPlugin.WAVE_IMPACT_MILLIS, now);
 			}
 		}
 	}

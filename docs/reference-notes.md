@@ -2,7 +2,7 @@
 
 Source specimen: [RyanTamulevicz/tempoross-solo-helper](https://github.com/RyanTamulevicz/tempoross-solo-helper)
 
-These notes capture useful facts and patterns observed in the reference plugin. They are research notes, not a design specification for Tempoross Coach.
+These notes capture useful facts and patterns observed in the reference plugin. They are research notes, not a design specification for Tempoross Firefighter.
 
 ## Useful RuneLite constants
 
@@ -61,17 +61,17 @@ No useful Tempoross varbit, varplayer, or explicit region/area check was used by
 
 The specimen implements one no-cook solo route: an opening trip of 25 or 26 fish, later 27-fish trips, a three-fish partial load, an essence target near 10%, and a final kill phase. These thresholds describe that particular strategy and should not be treated as universal Tempoross rules.
 
-## Cautions for Tempoross Coach
+## Cautions for Tempoross Firefighter
 
 - Keep collection, encounter state, strategy decisions, and rendering in separate classes; the reference plugin class combines too many responsibilities.
 - Treat chat strings and recursive widget-text parsing as fallbacks because wording and widget structure are brittle.
 - Treat bar-width percentage calculations as estimates and guard against hidden or zero-width widgets.
 - Avoid depending on exact inventory transitions alone; dropped fish, missed events, cooking, and unusual player routes can confuse automatic progression.
 - The working-shore calculation assumes four known hopper locations and a stable arena layout.
-- The reference's manual overlay menu entries and hotkeys are intentionally not part of the initial Tempoross Coach MVP.
+- The reference's manual overlay menu entries and hotkeys are intentionally not part of the initial Tempoross Firefighter MVP.
 - Retain event-backed scene tracking and keep overlay rendering inexpensive.
 
-Tempoross Coach must remain guidance-only: no injected input, menu manipulation, clicks, movement, or game actions.
+Tempoross Firefighter must remain guidance-only: no injected input, menu manipulation, clicks, movement, or game actions.
 
 ## Additional legacy specimen
 
@@ -86,4 +86,4 @@ Additional source: [nmlynch94/runelite-external-plugins, `tempoross` branch](htt
 - `tempoross is vulnerable` was used as a phase-change chat signal.
 - Inventory changes were used to count raw, cooked, and crystallised harpoonfish.
 
-This plugin also relies on raw object IDs, script-stack positions, wall-clock fire/wave timers, and predictive notifications. Those techniques are old, brittle, and are not suitable for Tempoross Coach. In particular, predictive boss-mechanic timers and warnings conflict with the current project restrictions. Named gameval constants, visible current state, and non-predictive guidance should be preferred.
+This plugin also relies on raw object IDs, script-stack positions, wall-clock fire/wave timers, and predictive notifications. Those techniques are old, brittle, and are not suitable for Tempoross Firefighter. In particular, predictive boss-mechanic timers and warnings conflict with the current project restrictions. Named gameval constants, visible current state, and non-predictive guidance should be preferred.

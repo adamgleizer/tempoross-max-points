@@ -1,4 +1,4 @@
-package com.temporosscoach;
+package com.temporossfirefighter;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -17,11 +17,11 @@ class TemporossStepOverlay extends OverlayPanel {
     private static final Color UNSATISFIED_COLOR = new Color(255, 82, 82);
     private static final int DESCRIPTION_LINE_LENGTH = 70;
 
-    private final TemporossCoachPlugin plugin;
-    private final TemporossCoachConfig config;
+    private final TemporossFirefighterPlugin plugin;
+    private final TemporossFirefighterConfig config;
 
     @Inject
-    private TemporossStepOverlay(TemporossCoachPlugin plugin, TemporossCoachConfig config) {
+    private TemporossStepOverlay(TemporossFirefighterPlugin plugin, TemporossFirefighterConfig config) {
         super(plugin);
         this.plugin = plugin;
         this.config = config;

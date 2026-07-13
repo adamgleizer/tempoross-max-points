@@ -1,4 +1,4 @@
-package com.temporosscoach;
+package com.temporossfirefighter;
 
 import java.awt.Color;
 import net.runelite.client.config.Alpha;
@@ -8,10 +8,10 @@ import net.runelite.client.config.ConfigItem;
 import net.runelite.client.config.ConfigSection;
 import net.runelite.client.config.Notification;
 
-@ConfigGroup(TemporossCoachConfig.GROUP)
-public interface TemporossCoachConfig extends Config
+@ConfigGroup(TemporossFirefighterConfig.GROUP)
+public interface TemporossFirefighterConfig extends Config
 {
-	String GROUP = "tempoross-coach";
+	String GROUP = "tempoross-firefighter";
 
 	@ConfigSection(
 		name = "Target highlights",

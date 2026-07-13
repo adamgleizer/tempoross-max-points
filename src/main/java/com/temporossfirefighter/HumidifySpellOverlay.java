@@ -1,4 +1,4 @@
-package com.temporosscoach;
+package com.temporossfirefighter;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -20,13 +20,13 @@ final class HumidifySpellOverlay extends Overlay
 
 	private final Client client;
 	private final TemporossState state;
-	private final TemporossCoachConfig config;
+	private final TemporossFirefighterConfig config;
 
 	@Inject
 	private HumidifySpellOverlay(
 		Client client,
-		TemporossCoachPlugin plugin,
-		TemporossCoachConfig config)
+		TemporossFirefighterPlugin plugin,
+		TemporossFirefighterConfig config)
 	{
 		super(plugin);
 		this.client = client;

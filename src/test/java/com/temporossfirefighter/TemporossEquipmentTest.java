@@ -1,4 +1,4 @@
-package com.temporosscoach;
+package com.temporossfirefighter;
 
 import net.runelite.api.Item;
 import net.runelite.api.ItemContainer;
@@ -14,18 +14,18 @@ public class TemporossEquipmentTest
 	@Test
 	public void eitherEquippedImcandoHammerSatisfiesHammerRequirement()
 	{
-		assertTrue(TemporossCoachPlugin.hasEquippedImcandoHammer(equipment(
+		assertTrue(TemporossFirefighterPlugin.hasEquippedImcandoHammer(equipment(
 			new Item(ItemID.IMCANDO_HAMMER, 1))));
-		assertTrue(TemporossCoachPlugin.hasEquippedImcandoHammer(equipment(
+		assertTrue(TemporossFirefighterPlugin.hasEquippedImcandoHammer(equipment(
 			new Item(ItemID.IMCANDO_HAMMER_OFFHAND, 1))));
 	}
 
 	@Test
 	public void unrelatedOrMissingEquipmentDoesNotSatisfyHammerRequirement()
 	{
-		assertFalse(TemporossCoachPlugin.hasEquippedImcandoHammer(equipment(
+		assertFalse(TemporossFirefighterPlugin.hasEquippedImcandoHammer(equipment(
 			new Item(ItemID.HAMMER, 1))));
-		assertFalse(TemporossCoachPlugin.hasEquippedImcandoHammer(null));
+		assertFalse(TemporossFirefighterPlugin.hasEquippedImcandoHammer(null));
 	}
 
 	@Test
@@ -42,17 +42,17 @@ public class TemporossEquipmentTest
 	@Test
 	public void dragonInfernalAndCrystalHarpoonsAreRecognized()
 	{
-		assertTrue(TemporossCoachPlugin.isKnownHarpoonId(ItemID.DRAGON_HARPOON));
-		assertTrue(TemporossCoachPlugin.isKnownHarpoonId(ItemID.INFERNAL_HARPOON));
-		assertTrue(TemporossCoachPlugin.isKnownHarpoonId(ItemID.INFERNAL_HARPOON_EMPTY));
-		assertTrue(TemporossCoachPlugin.isKnownHarpoonId(ItemID.CRYSTAL_HARPOON));
-		assertTrue(TemporossCoachPlugin.isKnownHarpoonId(ItemID.CRYSTAL_HARPOON_INACTIVE));
+		assertTrue(TemporossFirefighterPlugin.isKnownHarpoonId(ItemID.DRAGON_HARPOON));
+		assertTrue(TemporossFirefighterPlugin.isKnownHarpoonId(ItemID.INFERNAL_HARPOON));
+		assertTrue(TemporossFirefighterPlugin.isKnownHarpoonId(ItemID.INFERNAL_HARPOON_EMPTY));
+		assertTrue(TemporossFirefighterPlugin.isKnownHarpoonId(ItemID.CRYSTAL_HARPOON));
+		assertTrue(TemporossFirefighterPlugin.isKnownHarpoonId(ItemID.CRYSTAL_HARPOON_INACTIVE));
 	}
 
 	@Test
 	public void fullSpiritAnglerSetActsAsRope()
 	{
-		assertTrue(TemporossCoachPlugin.hasFullSpiritAngler(equipment(
+		assertTrue(TemporossFirefighterPlugin.hasFullSpiritAngler(equipment(
 			new Item(ItemID.SPIRIT_ANGLER_HAT, 1),
 			new Item(ItemID.SPIRIT_ANGLER_TOP, 1),
 			new Item(ItemID.SPIRIT_ANGLER_LEGS, 1),
@@ -62,7 +62,7 @@ public class TemporossEquipmentTest
 	@Test
 	public void partialSpiritAnglerSetDoesNotActAsRope()
 	{
-		assertFalse(TemporossCoachPlugin.hasFullSpiritAngler(equipment(
+		assertFalse(TemporossFirefighterPlugin.hasFullSpiritAngler(equipment(
 			new Item(ItemID.SPIRIT_ANGLER_HAT, 1),
 			new Item(ItemID.SPIRIT_ANGLER_TOP, 1),
 			new Item(ItemID.SPIRIT_ANGLER_LEGS, 1))));
@@ -71,7 +71,7 @@ public class TemporossEquipmentTest
 	@Test
 	public void missingEquipmentDoesNotActAsRope()
 	{
-		assertFalse(TemporossCoachPlugin.hasFullSpiritAngler(null));
+		assertFalse(TemporossFirefighterPlugin.hasFullSpiritAngler(null));
 	}
 
 	private static ItemContainer equipment(Item... items)
