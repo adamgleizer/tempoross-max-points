@@ -8,6 +8,7 @@ public class TemporossStrategy
 	private static final int FULL_BATCH_TARGET = 19;
 	private static final int FINAL_FISH_TARGET = 2;
 	private static final int STORM_LEAVE_THRESHOLD = 91;
+	private static final int SECOND_BATCH_LOAD_STORM = 80;
 	private static final int FINAL_WARNING_STORM = 90;
 	private static final int ESSENCE_GOAL = 50;
 
@@ -82,15 +83,15 @@ public class TemporossStrategy
 
 	private TemporossInstruction missingSupplyInstruction(TemporossState state)
 	{
-		if (state.getRope() < 1)
-		{
-			return progress("Get a rope", "Click the highlighted Ropes object.",
-				TemporossInstruction.Type.GET_ROPE, "Rope", state.getRope() + " / 1", false);
-		}
 		if (state.getHammer() < 1)
 		{
 			return progress("Get a hammer", "Click the highlighted Hammers object.",
 				TemporossInstruction.Type.GET_HAMMER, "Hammer", state.getHammer() + " / 1", false);
+		}
+		if (state.getRope() < 1)
+		{
+			return progress("Get a rope", "Click the highlighted Ropes object.",
+				TemporossInstruction.Type.GET_ROPE, "Rope", state.getRope() + " / 1", false);
 		}
 		if (stage == TemporossStage.COLLECT_FIRST_BATCH
 			&& totalFish(state) == 0
@@ -281,9 +282,27 @@ public class TemporossStrategy
 					enterPoolStage(TemporossStage.ATTACK_RECOVERY_POOL, state);
 					break;
 				}
-				if ((state.getCookedHarpoonfish() >= FULL_BATCH_TARGET
-					|| isStormAtLeast(state, STORM_LEAVE_THRESHOLD))
+				if (state.getCookedHarpoonfish() >= FULL_BATCH_TARGET)
+				{
+					if (isStormAtLeast(state, SECOND_BATCH_LOAD_STORM))
+					{
+						stage = TemporossStage.LOAD_THIRD_BATCH;
+						thirdBatchLoaded = 0;
+					}
+					else
+					{
+						stage = TemporossStage.EXTINGUISH_BEFORE_THIRD_LOAD;
+					}
+				}
+				else if (isStormAtLeast(state, STORM_LEAVE_THRESHOLD)
 					&& state.getCookedHarpoonfish() > 0)
+				{
+					stage = TemporossStage.LOAD_THIRD_BATCH;
+					thirdBatchLoaded = 0;
+				}
+				break;
+			case EXTINGUISH_BEFORE_THIRD_LOAD:
+				if (isStormAtLeast(state, SECOND_BATCH_LOAD_STORM))
 				{
 					stage = TemporossStage.LOAD_THIRD_BATCH;
 					thirdBatchLoaded = 0;
@@ -437,6 +456,13 @@ public class TemporossStrategy
 					stormGuidance(state,
 						"Douse 5-6 fires if useful, refill buckets, and drop excess buckets "
 							+ "to make room while collecting the next 19 fish."));
+			case EXTINGUISH_BEFORE_THIRD_LOAD:
+				Integer storm = state.getStormIntensityPercent();
+				return progress("Extinguish fires",
+					"The 19 cooked fish are ready. Extinguish fires until storm intensity reaches 80%, then load the batch.",
+					TemporossInstruction.Type.DOUSE_ALL_FIRES, "Storm intensity",
+					storm == null ? "-- / 80%" : storm + "% / 80%",
+					storm != null && storm >= SECOND_BATCH_LOAD_STORM);
 			case LOAD_THIRD_BATCH:
 				return progress("Load the batch",
 					"Load every cooked fish into the ammunition crate.", TemporossInstruction.Type.LOAD,

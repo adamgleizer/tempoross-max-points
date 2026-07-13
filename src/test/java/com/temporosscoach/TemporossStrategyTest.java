@@ -45,14 +45,14 @@ public class TemporossStrategyTest
 		state.setEncounterState(true, 100, 100, 0);
 		state.updateInventory(new TestItemContainer());
 
-		TemporossInstruction rope = strategy.getInstruction(state);
-		assertEquals("Get a rope", rope.getTitle());
-		assertEquals(TemporossInstruction.Type.GET_ROPE, rope.getType());
-
-		state.updateInventory(new TestItemContainer(new Item(ItemID.ROPE, 1)));
 		TemporossInstruction hammer = strategy.getInstruction(state);
 		assertEquals("Get a hammer", hammer.getTitle());
 		assertEquals(TemporossInstruction.Type.GET_HAMMER, hammer.getType());
+
+		state.updateInventory(new TestItemContainer(new Item(ItemID.HAMMER, 1)));
+		TemporossInstruction rope = strategy.getInstruction(state);
+		assertEquals("Get a rope", rope.getTitle());
+		assertEquals(TemporossInstruction.Type.GET_ROPE, rope.getType());
 
 		state.updateInventory(new TestItemContainer(
 			new Item(ItemID.ROPE, 1), new Item(ItemID.HAMMER, 1)));
@@ -296,6 +296,11 @@ public class TemporossStrategyTest
 		setFish(state, 19, 0);
 		assertStage(strategy, state, TemporossStage.COLLECT_THIRD_BATCH);
 		setFish(state, 0, 19);
+		TemporossInstruction firefighting = strategy.getInstruction(state);
+		assertEquals(TemporossStage.EXTINGUISH_BEFORE_THIRD_LOAD, strategy.getStage());
+		assertEquals(TemporossInstruction.Type.DOUSE_ALL_FIRES, firefighting.getType());
+		assertEquals("0% / 80%", firefighting.getProgressText());
+		state.setEncounterState(true, 100, 100, 80);
 		assertStage(strategy, state, TemporossStage.LOAD_THIRD_BATCH);
 		state.setSpiritPoolActive(true);
 		setFish(state, 0, 0);
@@ -420,6 +425,8 @@ public class TemporossStrategyTest
 		setFish(state, 19, 0);
 		assertStage(strategy, state, TemporossStage.COLLECT_THIRD_BATCH);
 		setFish(state, 0, 19);
+		assertStage(strategy, state, TemporossStage.EXTINGUISH_BEFORE_THIRD_LOAD);
+		state.setEncounterState(true, 100, 60, 80);
 		assertStage(strategy, state, TemporossStage.LOAD_THIRD_BATCH);
 		state.setSpiritPoolActive(true);
 		setFish(state, 0, 0);
