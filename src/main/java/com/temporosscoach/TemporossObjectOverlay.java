@@ -229,7 +229,6 @@ class TemporossObjectOverlay extends Overlay
 			}
 			if (isDamagedTetherPoint(tetherPoint.getId()))
 			{
-				renderTile(graphics, tetherPoint, config.damagedTetherPointColor());
 				renderHull(graphics, tetherPoint.getConvexHull(), config.damagedTetherPointColor());
 			}
 		}
