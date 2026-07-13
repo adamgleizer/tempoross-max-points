@@ -12,6 +12,34 @@ import static org.junit.Assert.assertTrue;
 public class TemporossEquipmentTest
 {
 	@Test
+	public void eitherEquippedImcandoHammerSatisfiesHammerRequirement()
+	{
+		assertTrue(TemporossCoachPlugin.hasEquippedImcandoHammer(equipment(
+			new Item(ItemID.IMCANDO_HAMMER, 1))));
+		assertTrue(TemporossCoachPlugin.hasEquippedImcandoHammer(equipment(
+			new Item(ItemID.IMCANDO_HAMMER_OFFHAND, 1))));
+	}
+
+	@Test
+	public void unrelatedOrMissingEquipmentDoesNotSatisfyHammerRequirement()
+	{
+		assertFalse(TemporossCoachPlugin.hasEquippedImcandoHammer(equipment(
+			new Item(ItemID.HAMMER, 1))));
+		assertFalse(TemporossCoachPlugin.hasEquippedImcandoHammer(null));
+	}
+
+	@Test
+	public void carriedImcandoHammerVariantsSatisfyHammerRequirement()
+	{
+		TemporossState state = new TemporossState();
+		state.updateInventory(equipment(new Item(ItemID.IMCANDO_HAMMER, 1)));
+		assertTrue(state.getHammer() >= 1);
+
+		state.updateInventory(equipment(new Item(ItemID.IMCANDO_HAMMER_OFFHAND, 1)));
+		assertTrue(state.getHammer() >= 1);
+	}
+
+	@Test
 	public void dragonInfernalAndCrystalHarpoonsAreRecognized()
 	{
 		assertTrue(TemporossCoachPlugin.isKnownHarpoonId(ItemID.DRAGON_HARPOON));

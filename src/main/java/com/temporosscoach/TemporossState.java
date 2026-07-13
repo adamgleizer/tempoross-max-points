@@ -66,6 +66,8 @@ public class TemporossState
 					rope += quantity;
 					break;
 				case ItemID.HAMMER:
+				case ItemID.IMCANDO_HAMMER:
+				case ItemID.IMCANDO_HAMMER_OFFHAND:
 					hammer += quantity;
 					break;
 				case ItemID.ASTRALRUNE:
@@ -124,6 +126,11 @@ public class TemporossState
 	void setRopePresent(boolean ropePresent)
 	{
 		rope = ropePresent ? 1 : 0;
+	}
+
+	void setHammerPresent(boolean hammerPresent)
+	{
+		hammer = hammerPresent ? 1 : 0;
 	}
 
 	void addRunePouchContents(int astralRunes, int waterRunes, int fireRunes)

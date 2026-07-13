@@ -227,6 +227,9 @@ public class TemporossCoachPlugin extends Plugin
 		state.setRopePresent(
 			state.getRope() >= 1
 				|| hasFullSpiritAngler(equipment));
+		state.setHammerPresent(
+			state.getHammer() >= 1
+				|| hasEquippedImcandoHammer(equipment));
 		state.setHarpoonPresent(
 			containsHarpoon(inventory)
 				|| weaponIsHarpoon(equipment));
@@ -416,6 +419,25 @@ public class TemporossCoachPlugin extends Plugin
 			}
 		}
 		return hat && top && legs && boots;
+	}
+
+	static boolean hasEquippedImcandoHammer(ItemContainer equipment)
+	{
+		if (equipment == null)
+		{
+			return false;
+		}
+
+		for (Item item : equipment.getItems())
+		{
+			if (item != null && item.getQuantity() > 0
+				&& (item.getId() == ItemID.IMCANDO_HAMMER
+					|| item.getId() == ItemID.IMCANDO_HAMMER_OFFHAND))
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private boolean isHarpoon(Item item)
