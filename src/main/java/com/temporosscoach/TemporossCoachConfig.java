@@ -267,7 +267,7 @@ public interface TemporossCoachConfig extends Config
 	)
 	default Color missingSupplyColor()
 	{
-		return Color.RED;
+		return Color.CYAN;
 	}
 
 	@ConfigItem(

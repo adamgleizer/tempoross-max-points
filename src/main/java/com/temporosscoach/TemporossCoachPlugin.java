@@ -222,10 +222,14 @@ public class TemporossCoachPlugin extends Plugin
 	public void onGameTick(GameTick event)
 	{
 		ItemContainer inventory = client.getItemContainer(InventoryID.INV);
+		ItemContainer equipment = client.getItemContainer(InventoryID.WORN);
 		state.updateInventory(inventory);
+		state.setRopePresent(
+			state.getRope() >= 1
+				|| hasFullSpiritAngler(equipment));
 		state.setHarpoonPresent(
 			containsHarpoon(inventory)
-				|| weaponIsHarpoon(client.getItemContainer(InventoryID.WORN)));
+				|| weaponIsHarpoon(equipment));
 		updateRunePouchContents();
 		updateInfoBoxes();
 		hudReader.update(state);
@@ -375,10 +379,72 @@ public class TemporossCoachPlugin extends Plugin
 			&& isHarpoon(items[weaponSlot]);
 	}
 
+	static boolean hasFullSpiritAngler(ItemContainer equipment)
+	{
+		if (equipment == null)
+		{
+			return false;
+		}
+
+		boolean hat = false;
+		boolean top = false;
+		boolean legs = false;
+		boolean boots = false;
+		for (Item item : equipment.getItems())
+		{
+			if (item == null || item.getQuantity() <= 0)
+			{
+				continue;
+			}
+
+			switch (item.getId())
+			{
+				case ItemID.SPIRIT_ANGLER_HAT:
+					hat = true;
+					break;
+				case ItemID.SPIRIT_ANGLER_TOP:
+					top = true;
+					break;
+				case ItemID.SPIRIT_ANGLER_LEGS:
+					legs = true;
+					break;
+				case ItemID.SPIRIT_ANGLER_BOOTS:
+					boots = true;
+					break;
+				default:
+					break;
+			}
+		}
+		return hat && top && legs && boots;
+	}
+
 	private boolean isHarpoon(Item item)
 	{
+		if (isKnownHarpoonId(item.getId()))
+		{
+			return true;
+		}
+
 		String name = itemManager.getItemComposition(item.getId()).getName();
 		return name != null && name.toLowerCase(java.util.Locale.ROOT).contains("harpoon");
+	}
+
+	static boolean isKnownHarpoonId(int itemId)
+	{
+		switch (itemId)
+		{
+			case ItemID.HARPOON:
+			case ItemID.HUNTING_BARBED_HARPOON:
+			case ItemID.DRAGON_HARPOON:
+			case ItemID.INFERNAL_HARPOON:
+			case ItemID.INFERNAL_HARPOON_EMPTY:
+			case ItemID.CRYSTAL_HARPOON:
+			case ItemID.CRYSTAL_HARPOON_INACTIVE:
+			case ItemID.CRYSTAL_HARPOON_FISHING:
+				return true;
+			default:
+				return false;
+		}
 	}
 
 	private void updateInfoBoxes()

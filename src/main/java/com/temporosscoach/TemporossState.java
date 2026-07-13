@@ -121,6 +121,11 @@ public class TemporossState
 		harpoons = harpoonPresent ? 1 : 0;
 	}
 
+	void setRopePresent(boolean ropePresent)
+	{
+		rope = ropePresent ? 1 : 0;
+	}
+
 	void addRunePouchContents(int astralRunes, int waterRunes, int fireRunes)
 	{
 		this.astralRunes += Math.max(0, astralRunes);
