@@ -321,7 +321,7 @@ public class TemporossStrategyTest
 		TemporossInstruction oneFish = strategy.getInstruction(state);
 		assertEquals(TemporossStage.EXTINGUISH_FIRES, strategy.getStage());
 		assertEquals("1 / 2", oneFish.getProgressText());
-		state.setEncounterState(true, 100, 45, 90);
+		state.setEncounterState(true, 100, 45, 80);
 		assertTrue(strategy.getInstruction(state).getDescription().contains("finish now"));
 		state.setEncounterState(true, 100, 45, 0);
 		setFish(state, 2, 0);
@@ -330,10 +330,12 @@ public class TemporossStrategyTest
 		assertEquals("Extinguish fires", readyToFinish.getTitle());
 		assertEquals(TemporossInstruction.Type.DOUSE_ALL_FIRES, readyToFinish.getType());
 
-		state.setEncounterState(true, 100, 45, 90);
+		state.setEncounterState(true, 100, 45, 79);
+		assertStage(strategy, state, TemporossStage.EXTINGUISH_FIRES);
+		state.setEncounterState(true, 100, 45, 80);
 		assertStage(strategy, state, TemporossStage.LOAD_FINAL_FISH);
 		state.setSpiritPoolActive(true);
-		state.setEncounterState(true, 0, 45, 90);
+		state.setEncounterState(true, 0, 45, 80);
 		setFish(state, 0, 0);
 		assertStage(strategy, state, TemporossStage.FINISH_TEMPOROSS);
 		assertEquals("Finish Tempoross", strategy.getInstruction(state).getTitle());

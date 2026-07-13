@@ -9,7 +9,7 @@ public class TemporossStrategy
 	private static final int FINAL_FISH_TARGET = 2;
 	private static final int STORM_LEAVE_THRESHOLD = 91;
 	private static final int SECOND_BATCH_LOAD_STORM = 80;
-	private static final int FINAL_WARNING_STORM = 90;
+	private static final int FINAL_WARNING_STORM = 80;
 	private static final int ESSENCE_GOAL = 50;
 
 	private TemporossStage stage = TemporossStage.COLLECT_FIRST_BATCH;
@@ -487,9 +487,9 @@ public class TemporossStrategy
 				boolean finalFishReady = totalFish >= FINAL_FISH_TARGET;
 				return progress(finalFishReady ? "Extinguish fires" : "Extinguish fires and catch 2 fish",
 					isStormAtLeast(state, FINAL_WARNING_STORM)
-						? "Storm is at least 90%: secure the two fish, load them, and finish now."
+						? "Storm is at least 80%: secure the two fish, load them, and finish now."
 						: finalFishReady
-							? "The final fish are ready. Extinguish as many island fires as possible until the 90% finish warning."
+							? "The final fish are ready. Extinguish as many island fires as possible until the 80% finish warning."
 							: "Extinguish island fires while collecting two fish for the final load. Cooking is optional.",
 					finalFishReady ? TemporossInstruction.Type.DOUSE_ALL_FIRES : TemporossInstruction.Type.FISH,
 					"Total fish", totalFish + " / " + FINAL_FISH_TARGET,
