@@ -54,8 +54,8 @@ class TemporossPreparationOverlay extends OverlayPanel
 			state.getRope() >= 1 ? "Ready" : "Missing");
 		addRequirement("Hammer", state.getHammer() >= 1,
 			state.getHammer() >= 1 ? "Ready" : "Missing");
-		addRequirement("Humidify", state.hasHumidifyRunes(),
-			state.hasHumidifyRunes() ? "Ready" : "Missing");
+		boolean humidifyReady = state.canCastHumidify();
+		addRequirement("Humidify", humidifyReady, humidifyReady ? "Ready" : "Missing");
 		addRequirement("Harpoon", state.getHarpoons() >= 1, state.getHarpoons() >= 1 ? "Ready" : "Missing");
 		addRequirement(
 			"Free slots",

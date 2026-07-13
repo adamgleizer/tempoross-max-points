@@ -14,10 +14,6 @@ public class TemporossState
 	private int waterBuckets;
 	private int rope;
 	private int hammer;
-	private int runePouches;
-	private int astralRunes;
-	private int waterRunes;
-	private int fireRunes;
 	private int harpoons;
 	private int freeInventorySlots;
 	private boolean inEncounter;
@@ -29,6 +25,7 @@ public class TemporossState
 	private boolean doubleFishingSpotActive;
 	private boolean shipFireActive;
 	private boolean loadingFish;
+	private boolean humidifyCastable;
 
 	void updateInventory(ItemContainer inventory)
 	{
@@ -70,21 +67,6 @@ public class TemporossState
 				case ItemID.IMCANDO_HAMMER_OFFHAND:
 					hammer += quantity;
 					break;
-				case ItemID.ASTRALRUNE:
-					astralRunes += quantity;
-					break;
-				case ItemID.WATERRUNE:
-					waterRunes += quantity;
-					break;
-				case ItemID.FIRERUNE:
-					fireRunes += quantity;
-					break;
-				case ItemID.BH_RUNE_POUCH:
-				case ItemID.BH_RUNE_POUCH_TROUVER:
-				case ItemID.DIVINE_RUNE_POUCH:
-				case ItemID.DIVINE_RUNE_POUCH_TROUVER:
-					runePouches += quantity;
-					break;
 				case ItemID.HARPOON:
 				case ItemID.HUNTING_BARBED_HARPOON:
 				case ItemID.DRAGON_HARPOON:
@@ -110,10 +92,6 @@ public class TemporossState
 		waterBuckets = 0;
 		rope = 0;
 		hammer = 0;
-		runePouches = 0;
-		astralRunes = 0;
-		waterRunes = 0;
-		fireRunes = 0;
 		harpoons = 0;
 		freeInventorySlots = 0;
 	}
@@ -133,11 +111,9 @@ public class TemporossState
 		hammer = hammerPresent ? 1 : 0;
 	}
 
-	void addRunePouchContents(int astralRunes, int waterRunes, int fireRunes)
+	void setHumidifyCastable(boolean humidifyCastable)
 	{
-		this.astralRunes += Math.max(0, astralRunes);
-		this.waterRunes += Math.max(0, waterRunes);
-		this.fireRunes += Math.max(0, fireRunes);
+		this.humidifyCastable = humidifyCastable;
 	}
 
 	void setEncounterState(
@@ -191,6 +167,7 @@ public class TemporossState
 	{
 		clearInventory();
 		clearEncounterState();
+		humidifyCastable = false;
 	}
 
 	public int getRawHarpoonfish()
@@ -233,14 +210,9 @@ public class TemporossState
 		return hammer;
 	}
 
-	public int getRunePouches()
+	public boolean canCastHumidify()
 	{
-		return runePouches;
-	}
-
-	public boolean hasHumidifyRunes()
-	{
-		return astralRunes >= 1 && waterRunes >= 3 && fireRunes >= 1;
+		return humidifyCastable;
 	}
 
 	public int getHarpoons()

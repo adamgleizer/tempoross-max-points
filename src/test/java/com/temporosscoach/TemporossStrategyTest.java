@@ -597,7 +597,7 @@ public class TemporossStrategyTest
 		TemporossState state = new TemporossState();
 		state.updateInventory(new TestItemContainer(items));
 		state.setHarpoonPresent(true);
-		state.addRunePouchContents(1, 3, 1);
+		state.setHumidifyCastable(true);
 
 		assertEquals(25, state.getFreeInventorySlots());
 		assertEquals("Ready for Tempoross", new TemporossStrategy().getInstruction(state).getTitle());
@@ -634,7 +634,7 @@ public class TemporossStrategyTest
 		TemporossState state = new TemporossState();
 		state.updateInventory(new TestItemContainer(items.toArray(new Item[0])));
 		state.setHarpoonPresent(true);
-		state.addRunePouchContents(1, 3, 1);
+		state.setHumidifyCastable(true);
 		return state;
 	}
 

@@ -20,8 +20,6 @@ import net.runelite.api.GameObject;
 import net.runelite.api.ItemContainer;
 import net.runelite.api.Item;
 import net.runelite.api.EquipmentInventorySlot;
-import net.runelite.api.EnumComposition;
-import net.runelite.api.EnumID;
 import net.runelite.api.NPC;
 import net.runelite.api.Point;
 import net.runelite.api.Tile;
@@ -37,11 +35,13 @@ import net.runelite.api.events.NpcChanged;
 import net.runelite.api.events.NpcDespawned;
 import net.runelite.api.events.NpcSpawned;
 import net.runelite.api.gameval.InventoryID;
+import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.gameval.ItemID;
 import net.runelite.api.gameval.NpcID;
 import net.runelite.api.gameval.ObjectID;
 import net.runelite.api.gameval.SpriteID;
 import net.runelite.api.gameval.VarbitID;
+import net.runelite.api.widgets.Widget;
 import net.runelite.client.Notifier;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -233,7 +233,7 @@ public class TemporossCoachPlugin extends Plugin
 		state.setHarpoonPresent(
 			containsHarpoon(inventory)
 				|| weaponIsHarpoon(equipment));
-		updateRunePouchContents();
+		updateHumidifyCastable();
 		updateInfoBoxes();
 		hudReader.update(state);
 		if (state.isInEncounter() && !wasInEncounter)
@@ -296,57 +296,31 @@ public class TemporossCoachPlugin extends Plugin
 		state.setLoadingFish(loadTracker.update(client.getTickCount(), interactingWithCrate));
 	}
 
-	private void updateRunePouchContents()
+	private void updateHumidifyCastable()
 	{
-		if (state.getRunePouches() < 1)
-		{
-			return;
-		}
+		refreshSpellbookState();
+		Widget humidify = client.getWidget(InterfaceID.MagicSpellbook.HUMIDIFY);
+		state.setHumidifyCastable(humidify != null
+			&& isHumidifyCastableState(humidify.getSpriteId(), humidify.isSelfHidden()));
+	}
 
-		int[] runeVarbits = {
-			VarbitID.RUNE_POUCH_TYPE_1,
-			VarbitID.RUNE_POUCH_TYPE_2,
-			VarbitID.RUNE_POUCH_TYPE_3,
-			VarbitID.RUNE_POUCH_TYPE_4,
-			VarbitID.RUNE_POUCH_TYPE_5,
-			VarbitID.RUNE_POUCH_TYPE_6
-		};
-		int[] quantityVarbits = {
-			VarbitID.RUNE_POUCH_QUANTITY_1,
-			VarbitID.RUNE_POUCH_QUANTITY_2,
-			VarbitID.RUNE_POUCH_QUANTITY_3,
-			VarbitID.RUNE_POUCH_QUANTITY_4,
-			VarbitID.RUNE_POUCH_QUANTITY_5,
-			VarbitID.RUNE_POUCH_QUANTITY_6
-		};
-		EnumComposition runePouchRunes = client.getEnum(EnumID.RUNEPOUCH_RUNE);
-		int astral = 0;
-		int water = 0;
-		int fire = 0;
-		for (int slot = 0; slot < runeVarbits.length; slot++)
+	private void refreshSpellbookState()
+	{
+		Widget spellbook = client.getWidget(InterfaceID.MagicSpellbook.UNIVERSE);
+		if (spellbook != null && spellbook.getOnInvTransmitListener() != null)
 		{
-			int quantity = client.getVarbitValue(quantityVarbits[slot]);
-			int runeType = client.getVarbitValue(runeVarbits[slot]);
-			if (quantity <= 0 || runeType == 0)
-			{
-				continue;
-			}
-
-			int runeItemId = runePouchRunes.getIntValue(runeType);
-			if (runeItemId == ItemID.ASTRALRUNE)
-			{
-				astral += quantity;
-			}
-			else if (runeItemId == ItemID.WATERRUNE)
-			{
-				water += quantity;
-			}
-			else if (runeItemId == ItemID.FIRERUNE)
-			{
-				fire += quantity;
-			}
+			client.createScriptEventBuilder(spellbook.getOnInvTransmitListener())
+				.setSource(spellbook)
+				.build()
+				.run();
 		}
-		state.addRunePouchContents(astral, water, fire);
+	}
+
+	static boolean isHumidifyCastableState(Integer spriteId, boolean selfHidden)
+	{
+		return !selfHidden
+			&& spriteId != null
+			&& spriteId != SpriteID.LunarMagicOff.HUMIDIFY;
 	}
 
 	private boolean containsHarpoon(ItemContainer itemContainer)

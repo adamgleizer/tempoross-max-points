@@ -499,7 +499,7 @@ public class TemporossStrategy
 	{
 		return state.getRope() >= 1
 			&& state.getHammer() >= 1
-			&& state.hasHumidifyRunes()
+			&& state.canCastHumidify()
 			&& state.getHarpoons() >= 1
 			&& state.getFreeInventorySlots() >= REQUIRED_FREE_SLOTS;
 	}
